@@ -14,7 +14,7 @@ description: Lingman-Starter 框架 CRUD 代码生成助手。当用户需要：
 | Controller | `{Name}Controller.java` | 是 |
 | Service 接口 | `{Name}Service.java` | 是 |
 | Service 实现 | `{Name}ServiceImpl.java` | 是 |
-| VO | `{Name}CreateReqVO.java` 等 | 是 |
+| VO | `{Name}SaveReqVO.java` 等 | 是 |
 | Convert | `{Name}Convert.java`（MapStruct） | 是 |
 | DO | 不生成（由 CLI 工具从数据库生成） | 否 |
 | Mapper | 不生成（由 CLI 工具从数据库生成） | 否 |
@@ -26,8 +26,7 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 ├── controller/admin/{biz}/
 │   ├── {Name}Controller.java
 │   └── vo/
-│       ├── {Name}CreateReqVO.java
-│       ├── {Name}UpdateReqVO.java
+│       ├── {Name}SaveReqVO.java
 │       ├── {Name}RespVO.java
 │       └── {Name}PageReqVO.java
 └── service/admin/
@@ -42,13 +41,175 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 
 参见 [framework.md](../lingman-core/framework.md)。
 
-## 生成步骤
+## 前置条件：CLI 工具生成 DO/Mapper
 
-1. 用户描述业务实体字段（或提供已有 DO）
-2. 根据字段生成对应的 VO 类
-3. 生成 Controller，包含常用增删改查接口
-4. 生成 Service 接口和实现类
-5. DO 和 Mapper 由 CLI 工具从数据库生成，不在本 Skill 范围内
+本 Skill 不负责生成 DO 和 Mapper，这两层由 CLI 工具（`@lingman/cli`）从数据库自动同步。
+
+### CLI 安装（用户手动安装）
+
+**注意**：不会自动为用户安装 CLI 工具。如果用户尚未安装，提示他们按以下步骤操作：
+
+```bash
+# 1. 配置 npm registry
+npm config set registry https://registry.npmmirror.com/
+npm config set @lingman:registry=https://git.lingman.tech:8081/repository/npm_hosted/
+
+# 2. 安装（如已安装旧版可先执行 npm uninstall -g lingman-cli）
+npm install @lingman/cli -g
+```
+
+**环境要求**：Node.js 22+
+
+### 项目配置
+
+项目根目录需存在 `lingman.config.json`，可通过 `lm init java` 初始化：
+
+```json
+{
+  "lang": "java",
+  "template": "",
+  "db": {
+    "url": "jdbc:postgresql://<host>:<port>/<database>",
+    "username": "<username>",
+    "password": "<password>",
+    "hasBase": false
+  }
+}
+```
+
+数据库连接信息需根据项目 `application.yaml` 中的数据源配置替换。
+
+### 生成 DO/Mapper
+
+在**后端工程根目录**下执行：
+
+```bash
+lm mapper
+```
+
+> **重要**：该命令必须在后端工程根目录（即包含 `lingman.config.json` 和 `pom.xml` 的目录）中运行，不能在其他子目录中执行。
+
+### 生成前端 API
+
+```bash
+lm api
+```
+
+该命令根据后端 Swagger 地址（如 `/v3/api-docs`）自动生成前端接口定义，包含接口方法、入参类型和响应类型封装，需要在前端工程根目录下执行。
+
+## 交互流程
+
+操作前先判断场景类型：
+
+| 场景 | 说明 | 流程 |
+|------|------|------|
+| **场景 A — 全新模块** | 新建业务模块，无 DO/Mapper | 完整流程（Step 0~5） |
+| **场景 B — 已有表/DO** | 数据库表已存在，已通过 `lm mapper` 生成了 DO/Mapper | 完整流程（Step 0~5），跳过 CLI 步骤 |
+| **场景 C — 增量修改** | 在已有模块上增加字段、修改逻辑 | 增量流程（Step C1~C4） |
+
+---
+
+### 场景 A/B：全新模块生成
+
+#### Step 0 — 确认前置条件
+
+1. 检查项目是否已配置 `lingman.config.json`（如未配置，提示用户运行 `lm init java`）
+2. 对于场景 A：提示用户先通过 `lm mapper` 生成 DO 和 Mapper
+3. 对于场景 B：确认 DO 和 Mapper 已存在于项目中
+
+#### Step 1 — 收集配置选项 ⛔ 硬性确认
+
+**必须逐一确认以下选项，禁止自行假设任何值**：
+
+| 配置项 | 说明 | 示例 |
+|--------|------|------|
+| 业务中文名 | 模块的中文描述 | `公告`、`检测任务` |
+| 模块包名 | URL 路径标识（kebab-case） | `announcement`、`detection-task` |
+| 实体类名 | 驼峰大写 | `Announcement`、`DetectionTask` |
+| 数据库表名 | 对应的表名 | `t_announcement` |
+| ID 策略 | 序列名或自增 | `announcement_seq` |
+| 是否多租户 | 影响 BaseDO vs TenantBaseDO | `true` / `false` |
+
+#### Step 2 — 展示字段清单 ⛔ 硬性确认
+
+根据 DO 字段，列出将生成的 VO 字段清单，标注哪些字段为必填、哪些支持模糊查询。
+
+> **用户必须明确回复"确认"后，才能进入 Step 3。禁止在用户确认前生成任何代码。**
+
+#### Step 3 — 展示文件清单 ⛔ 硬性确认
+
+列出将要生成的全部文件路径，格式如下：
+
+```
+将生成以下文件：
+- src/main/java/com/lm/app/controller/admin/{biz}/{Name}Controller.java
+- src/main/java/com/lm/app/controller/admin/{biz}/vo/{Name}SaveReqVO.java
+- src/main/java/com/lm/app/controller/admin/{biz}/vo/{Name}RespVO.java
+- src/main/java/com/lm/app/controller/admin/{biz}/vo/{Name}PageReqVO.java
+- src/main/java/com/lm/app/service/{biz}/{Name}Service.java
+- src/main/java/com/lm/app/service/{biz}/impl/{Name}ServiceImpl.java
+- src/main/java/com/lm/app/convert/{biz}/{Name}Convert.java
+```
+
+> **用户必须明确回复"确认"后，才能进入 Step 4。禁止在用户确认前生成任何代码。**  
+> 如果用户回复"开始"、"生成"、"OK"等，都视为确认。
+
+#### Step 4 — 执行生成
+
+按以下顺序生成文件，同批次内的文件可并行写入：
+
+1. VO 类（SaveReqVO → RespVO → PageReqVO）
+2. Convert
+3. Service 接口 + 实现
+4. Controller
+
+#### Step 5 — 输出清单
+
+列出所有已生成的文件路径，并提示后续操作：
+
+```
+已生成以下文件：
+- ... (列表)
+
+后续操作建议：
+1. 在 ErrorCodeConstants.java 中添加错误码
+2. 如需权限控制，使用 permission-generator 生成权限配置
+3. 如需生成建表 SQL，使用 sql-generator
+```
+
+---
+
+### 场景 C：增量修改
+
+#### Step C1 — 定位已有模块
+
+确认要修改的模块名，读取该模块现有的全部文件（DO、VO、Service、Controller、Convert），了解当前结构。
+
+#### Step C2 — 确认修改内容
+
+确认要新增/修改/删除的字段或逻辑。
+
+#### Step C3 — 展示变更清单 ⛔ 硬性确认
+
+列出每个文件将发生的变更：
+
+```
+变更清单：
+- {Name}SaveReqVO.java — 新增字段：{fieldName}（{类型}）
+- {Name}RespVO.java — 新增字段：{fieldName}（{类型}）
+- {Name}PageReqVO.java — 无变更
+- {Name}Convert.java — 无变更（MapStruct 自动映射）
+- {Name}ServiceImpl.java — page 方法新增查询条件：{fieldName}
+```
+
+> **用户必须明确回复"确认"后，才能进入 Step C4。**  
+> 增量修改只改受影响的文件，禁止无关的格式化或重构。
+
+#### Step C4 — 执行修改
+
+只修改列出的文件，使用 `Edit` 工具进行精确替换，避免整文件重写。
+
+---
 
 ## 参考文档
 
@@ -57,3 +218,11 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 | 框架分层、命名规范 | [framework.md](../lingman-core/framework.md) |
 | 真实代码示例 | [crud-examples.md](references/crud-examples.md) |
 | 各层代码模板 | [code-template.md](references/code-template.md) |
+
+## 前端对接
+
+> **TODO**：本节预留，后续补充前端 View/API 层对接规范，包括：
+> - `lm api` 生成的前端接口定义如何与后端 VO 字段对应
+> - 前端表单校验规则与后端 `@Valid` 注解的对应关系
+> - 前端错误码处理与后端 `ErrorCodeConstants` 的对接
+> - 分页接口的前端调用封装

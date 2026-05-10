@@ -20,6 +20,11 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 | **返回格式** | 是否使用 `CommonResult<T>` 包装 | 中 |
 | **VO 隔离** | Controller 是否直接返回 DO | 高 |
 
+> **TODO**：前端审查维度预留，后续补充：
+> - 前端 API 调用是否使用 `lm api` 生成的封装
+> - 前端错误处理是否与后端错误码对齐
+> - 前端表单校验是否与后端 `@Valid` 规则一致
+
 ## 审查清单
 
 ### Controller 层
@@ -78,7 +83,7 @@ public CommonResult<Boolean> delete(...) { }
 
 // 正确
 @GetMapping("/delete")
-@PreAuthorize("@ss.hasPermission('stuff:announcement:delete')")
+@PreAuthorize("@ss.hasPermission('app:announcement:delete')")
 public CommonResult<Boolean> delete(...) { }
 ```
 

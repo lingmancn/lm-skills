@@ -8,6 +8,10 @@
   - [1. `createOperateLog`](#1-createoperatelog)
   - [2. `createOperateLogAsync`](#2-createoperatelogasync)
   - [3. `getOperateLogPage`](#3-getoperatelogpage)
+- [参数说明](#参数说明)
+  - [OperateLogCreateReqDTO](#operatelogcreatereqdto)
+  - [OperateLogPageReqDTO](#operatelogpagereqdto)
+  - [OperateLogRespDTO](#operatelogrespdto)
 - [接口一览](#接口一览)
 
 ## 由来
@@ -121,6 +125,49 @@ default void createOperateLogAsync(OperateLogCreateReqDTO createReqDTO) {
 ```java
 PageResult<OperateLogRespDTO> getOperateLogPage(OperateLogPageReqDTO pageReqDTO);
 ```
+
+## 参数说明
+
+### OperateLogCreateReqDTO
+
+- **traceId**：链路追踪编号（`String`）
+- **userId**：用户编号（`Long`，必填）
+- **userType**：用户类型（`Integer`，必填），枚举 `UserTypeEnum`
+- **type**：操作模块类型（`String`，必填）
+- **subType**：操作名（`String`，必填）
+- **bizId**：操作模块业务编号（`Long`，必填）
+- **action**：操作内容，记录整个操作的明细（`String`，必填）
+- **extra**：拓展字段，JSON 格式（`String`）
+- **requestMethod**：请求方法名（`String`，必填）
+- **requestUrl**：请求地址（`String`，必填）
+- **userIp**：用户 IP（`String`，必填）
+- **userAgent**：浏览器 UA（`String`，必填）
+
+### OperateLogPageReqDTO
+
+继承 `PageParam`，额外包含以下字段：
+
+- **type**：模块类型（`String`）
+- **bizId**：模块数据编号（`Long`）
+- **userId**：用户编号（`Long`）
+
+### OperateLogRespDTO
+
+- **id**：日志编号（`Long`）
+- **traceId**：链路追踪编号（`String`）
+- **userId**：用户编号（`Long`）
+- **userName**：用户名称（`String`），通过 `@Trans` 翻译
+- **userType**：用户类型（`Integer`）
+- **type**：操作模块类型（`String`）
+- **subType**：操作名（`String`）
+- **bizId**：操作模块业务编号（`Long`）
+- **action**：操作内容（`String`）
+- **extra**：拓展字段（`String`）
+- **requestMethod**：请求方法名（`String`）
+- **requestUrl**：请求地址（`String`）
+- **userIp**：用户 IP（`String`）
+- **userAgent**：浏览器 UA（`String`）
+- **createTime**：创建时间（`LocalDateTime`）
 
 ## 接口一览
 

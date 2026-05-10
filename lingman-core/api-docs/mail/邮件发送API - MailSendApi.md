@@ -7,6 +7,8 @@
 - [方法](#方法)
   - [1. `sendSingleMailToAdmin`](#1-sendsinglemailtoadmin)
   - [2. `sendSingleMailToMember`](#2-sendsinglemailtomember)
+- [参数说明](#参数说明)
+  - [MailSendSingleToUserReqDTO](#mailsendsingletouserreqdto)
 - [接口一览](#接口一览)
 
 ## 由来
@@ -76,6 +78,18 @@ Long sendSingleMailToAdmin(@Valid MailSendSingleToUserReqDTO reqDTO);
 ```java
 Long sendSingleMailToMember(@Valid MailSendSingleToUserReqDTO reqDTO);
 ```
+
+## 参数说明
+
+### MailSendSingleToUserReqDTO
+
+- **userId**：用户编号（`Long`）；非空时加载对应用户的邮箱，添加到 `toMails` 中
+- **toMails**：收件邮箱（`List<String>`）
+- **ccMails**：抄送邮箱（`List<String>`）
+- **bccMails**：密送邮箱（`List<String>`）
+- **templateCode**：邮件模板编号（`String`，必填）
+- **templateParams**：邮件模板参数（`Map<String, Object>`）
+- **attachments**：附件（`File[]`）
 
 ## 接口一览
 

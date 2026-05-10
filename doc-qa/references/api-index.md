@@ -12,6 +12,7 @@
 | DeptApi | [dept/部门 API - DeptApi.md](../../lingman-core/api-docs/dept/部门 API - DeptApi.md) | 部门查询、校验、获取子部门 |
 | PostApi | [dept/岗位 API - PostApi.md](../../lingman-core/api-docs/dept/岗位 API - PostApi.md) | 岗位查询、校验 |
 | DictDataCommonApi | [dict/字典数据 API - DictDataCommonApi.md](../../lingman-core/api-docs/dict/字典数据 API - DictDataCommonApi.md) | 字典数据查询、校验 |
+| NotificationDispatchApi | [notify/通知分发API - NotificationDispatchApi.md](../../lingman-core/api-docs/notify/通知分发API - NotificationDispatchApi.md) | 统一通知分发（自动匹配短信/邮件/站内信策略） |
 
 ### 基础设施 (infra)
 
@@ -23,6 +24,9 @@
 | SmsSendApi | [sms/短信发送API - SmsSendApi.md](../../lingman-core/api-docs/sms/短信发送API - SmsSendApi.md) | 短信发送 |
 | SmsCodeApi | [sms/短信验证码API - SmsCodeApi.md](../../lingman-core/api-docs/sms/短信验证码API - SmsCodeApi.md) | 短信验证码 |
 | MailSendApi | [mail/邮件发送API - MailSendApi.md](../../lingman-core/api-docs/mail/邮件发送API - MailSendApi.md) | 邮件发送 |
+| FileApi | [file/文件API - FileApi.md](../../lingman-core/api-docs/file/文件API - FileApi.md) | 文件上传、预签名读取、删除 |
+| ConfigApi | [config/参数配置API - ConfigApi.md](../../lingman-core/api-docs/config/参数配置API - ConfigApi.md) | 系统参数配置查询 |
+| WebSocketSenderApi | [websocket/WebSocket发送API - WebSocketSenderApi.md](../../lingman-core/api-docs/websocket/WebSocket发送API - WebSocketSenderApi.md) | WebSocket 消息推送 |
 
 ### 会员/社交 (member)
 
@@ -30,6 +34,13 @@
 |-----|------|------|
 | SocialClientApi | [social/社交应用API - SocialClientApi.md](../../lingman-core/api-docs/social/社交应用API - SocialClientApi.md) | 社交应用管理 |
 | SocialUserApi | [social/社交用户API - SocialUserApi.md](../../lingman-core/api-docs/social/社交用户API - SocialUserApi.md) | 社交用户管理 |
+
+### 工作流 (bpm)
+
+| API | 路径 | 用途 |
+|-----|------|------|
+| BpmProcessInstanceApi | [bpm/流程实例API - BpmProcessInstanceApi.md](../../lingman-core/api-docs/bpm/流程实例API - BpmProcessInstanceApi.md) | 创建流程实例（发起审批） |
+| BpmProcessTaskApi | [bpm/流程任务API - BpmProcessTaskApi.md](../../lingman-core/api-docs/bpm/流程任务API - BpmProcessTaskApi.md) | 触发流程任务执行 |
 
 ## 常用 API 速查
 

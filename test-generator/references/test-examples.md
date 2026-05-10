@@ -266,7 +266,7 @@ class AlarmRecordBuilderTest {
 
 ## 测试基类
 
-p708 工程不强制继承统一基类，根据测试类型选择：
+根据测试类型选择：
 
 - **Controller 测试**：`@SpringBootTest(classes = AppApplication.class)` + `@Transactional`
 - **Service 测试**：`@ExtendWith(MockitoExtension.class)` + `@Mock` + `@InjectMocks`

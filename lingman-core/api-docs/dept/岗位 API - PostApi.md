@@ -8,6 +8,8 @@
   - [1. `validPostList`](#1-validpostlist)
   - [2. `getPostList`](#2-getpostlist)
   - [3. `getPostMap`](#3-getpostmap)
+- [参数 / 返回说明](#参数--返回说明)
+  - [PostRespDTO](#postrespdto)
 - [接口一览](#接口一览)
 
 ## 由来
@@ -88,6 +90,16 @@ default Map<Long, PostRespDTO> getPostMap(Collection<Long> ids) {
     }
 }
 ```
+
+## 参数 / 返回说明
+
+### PostRespDTO
+
+- **id**：岗位序号（`Long`）
+- **name**：岗位名称（`String`）
+- **code**：岗位编码（`String`）
+- **sort**：岗位排序（`Integer`）
+- **status**：状态（`Integer`），枚举 `CommonStatusEnum`
 
 ## 接口一览
 

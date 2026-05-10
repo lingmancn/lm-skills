@@ -16,6 +16,7 @@ description: Lingman-Starter 框架接口设计生成助手。当用户需要：
 | 响应结构 | 成功/失败返回格式 |
 | 权限标识 | 接口所需权限点 |
 | Swagger 注解 | `@Tag`、`@Operation` 等 |
+| 前端接口定义 | `lm api` 生成的前端 API 封装 | 预留 |
 
 ## URL 设计规范
 
@@ -108,7 +109,7 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 
 ### 1. 创建公告
 - **URL**: POST /app/announcement/create
-- **权限**: stuff:announcement:create
+- **权限**: app:announcement:create
 - **请求**: AnnouncementCreateReqVO
   - title (string, required): 公告标题
   - content (string, required): 公告内容
@@ -117,7 +118,7 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 
 ### 2. 更新公告
 - **URL**: POST /app/announcement/update
-- **权限**: stuff:announcement:update
+- **权限**: app:announcement:update
 - **请求**: AnnouncementUpdateReqVO
   - id (long, required): 公告编号
   - title (string, required): 公告标题
@@ -128,19 +129,19 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 
 ### 3. 删除公告
 - **URL**: GET /app/announcement/delete
-- **权限**: stuff:announcement:delete
+- **权限**: app:announcement:delete
 - **请求**: id (long, query)
 - **响应**: CommonResult<Boolean>
 
 ### 4. 查询详情
 - **URL**: GET /app/announcement/get
-- **权限**: stuff:announcement:query
+- **权限**: app:announcement:query
 - **请求**: id (long, query)
 - **响应**: CommonResult<AnnouncementRespVO>
 
 ### 5. 分页查询
 - **URL**: POST /app/announcement/page
-- **权限**: stuff:announcement:query
+- **权限**: app:announcement:query
 - **请求**: AnnouncementPageReqVO
   - pageNo (int): 页码
   - pageSize (int): 每页条数
@@ -149,6 +150,37 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
   - status (int): 状态
 - **响应**: CommonResult<PageResult<AnnouncementRespVO>>
 ```
+
+## 配合 CLI 工具
+
+设计接口前，建议先用 CLI 工具从数据库生成 DO/Mapper，了解已有的数据表结构，确保接口定义与数据模型一致。
+
+### CLI 安装与使用
+
+```bash
+npm config set registry https://registry.npmmirror.com/
+npm config set @lingman:registry=https://git.lingman.tech:8081/repository/npm_hosted/
+npm install @lingman/cli -g
+```
+
+项目根目录需配置 `lingman.config.json`（通过 `lm init java` 初始化）：
+
+```json
+{
+  "lang": "java",
+  "template": "",
+  "db": {
+    "url": "jdbc:postgresql://<host>:<port>/<database>",
+    "username": "<username>",
+    "password": "<password>",
+    "hasBase": false
+  }
+}
+```
+
+在**后端工程根目录**下运行 `lm mapper` 可自动同步 DO/Mapper；在**前端工程根目录**下运行 `lm api` 可根据 Swagger 生成前端接口定义。
+
+> **重要**：两个命令都必须在对应工程根目录中运行，不能在其他子目录中执行。
 
 ## 参考文档
 

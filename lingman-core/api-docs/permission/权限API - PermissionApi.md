@@ -22,7 +22,7 @@
 
 与芋道云原版（`@FeignClient`、`CommonResult<T>`）不同，Starter 侧更偏向于作为**本地契约**使用：方法直接返回业务需要的数据结构（例如 `Boolean`、`Set<Long>`、`DeptDataPermissionRespDTO>`），避免 Feign/HTTP 语义渗透到业务代码。
 
-## xxxxxxxxxx public interface RoleApi {    void validRoleList(Collection<Long> ids);}java
+## 导入该 API
 
 1. **在业务工程中引入 Starter 依赖**：
 

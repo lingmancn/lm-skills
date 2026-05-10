@@ -31,7 +31,7 @@ PRIMARY KEY (`id`)
 - **字段命名**：小写蛇形（snake_case），与 Java 属性名一致
 - **状态字段**：`tinyint` 或 `int`，用数字表示状态，配合枚举类
 - **时间字段**：`datetime`，默认 `CURRENT_TIMESTAMP`
-- **逻辑删除**：`deleted` bit(1)，默认 `b'0'`（p708 中 `1`=删除, `0`=未删除）
+- **逻辑删除**：`deleted` bit(1)，默认 `b'0'`
 - **租户字段**（如启用多租户）：`tenant_id` bigint
 - **字符串长度**：根据业务实际长度设定，避免过度使用 `varchar(255)`
 - **金额字段**：`decimal(18,2)`，避免 `float` / `double`

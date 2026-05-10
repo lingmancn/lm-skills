@@ -6,6 +6,8 @@
 - [导入该 API](#导入该-api)
 - [方法](#方法)
   - [1. `createLoginLog`](#1-createloginlog)
+- [参数说明](#参数说明)
+  - [LoginLogCreateReqDTO](#loginlogcreatereqdto)
 - [接口一览](#接口一览)
 
 ## 由来
@@ -65,6 +67,19 @@
 ```java
 void createLoginLog(@Valid LoginLogCreateReqDTO reqDTO);
 ```
+
+## 参数说明
+
+### LoginLogCreateReqDTO
+
+- **logType**：日志类型（`Integer`，必填）
+- **traceId**：链路追踪编号（`String`）
+- **userId**：用户编号（`Long`）
+- **userType**：用户类型（`Integer`，必填）
+- **username**：用户账号（`String`）
+- **result**：登录结果（`Integer`，必填）
+- **userIp**：用户 IP（`String`，必填）
+- **userAgent**：浏览器 UserAgent（`String`）
 
 ## 接口一览
 

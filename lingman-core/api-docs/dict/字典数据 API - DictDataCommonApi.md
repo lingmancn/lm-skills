@@ -7,6 +7,8 @@
 - [方法](#方法)
   - [1. `getDictDataList`](#1-getdictdatalist)
   - [2. `validateDictDataList`](#2-validatedictdatalist)
+- [参数 / 返回说明](#参数--返回说明)
+  - [DictDataRespDTO](#dictdatarespdto)
 - [接口一览](#接口一览)
 
 ## 由来
@@ -80,6 +82,15 @@ List<DictDataRespDTO> getDictDataList(String dictType);
 ```java
 void validateDictDataList(String dictType, Collection<String> values);
 ```
+
+## 参数 / 返回说明
+
+### DictDataRespDTO
+
+- **label**：字典标签（`String`）
+- **value**：字典值（`String`）
+- **dictType**：字典类型（`String`）
+- **status**：状态（`Integer`），枚举 `CommonStatusEnum`
 
 ## 接口一览
 

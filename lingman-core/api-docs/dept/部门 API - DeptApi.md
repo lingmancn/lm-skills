@@ -10,6 +10,8 @@
   - [3. `validateDeptList`](#3-validatedeptlist)
   - [4. `getDeptMap`](#4-getdeptmap)
   - [5. `getChildDeptList`](#5-getchilddeptlist)
+- [参数 / 返回说明](#参数--返回说明)
+  - [DeptRespDTO](#deptrespdto)
 - [接口一览](#接口一览)
 
 ## 由来
@@ -97,6 +99,16 @@ default Map<Long, DeptRespDTO> getDeptMap(Collection<Long> ids) {
 ```java
 List<DeptRespDTO> getChildDeptList(Long id);
 ```
+
+## 参数 / 返回说明
+
+### DeptRespDTO
+
+- **id**：部门编号（`Long`）
+- **name**：部门名称（`String`）
+- **parentId**：父部门编号（`Long`）
+- **leaderUserId**：负责人的用户编号（`Long`）
+- **status**：部门状态（`Integer`），枚举 `CommonStatusEnum`
 
 ## 接口一览
 
