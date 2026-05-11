@@ -242,8 +242,21 @@ lm api
 
 ## 前端对接
 
-> **TODO**：本节预留，后续补充前端 View/API 层对接规范，包括：
-> - `lm api` 生成的前端接口定义如何与后端 VO 字段对应
-> - 前端表单校验规则与后端 `@Valid` 注解的对应关系
-> - 前端错误码处理与后端 `ErrorCodeConstants` 的对接
-> - 分页接口的前端调用封装
+前端开发规范详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)，核心要点：
+
+| 后端输出 | 前端对接 | 规范 |
+|----------|---------|------|
+| `SaveReqVO` 字段 + `@Valid` 注解 | 表单弹窗 `XxxForm.vue` | `el-form` + `FormRules`，校验规则与后端注解保持一致 |
+| `RespVO` 字段 | 表格列配置 `TableColumn[]` | 日期列用 `formatter: dateFormatter`，字典列用 `dict-tag` |
+| `PageReqVO` 字段 | 搜索表单 `queryParams` | 初始值统一为 `undefined`，分页参数使用 `PageParam` |
+| `CommonResult<T>` | API 响应处理 | 统一使用 `useMessage()` 进行成功/错误提示 |
+| `ErrorCodeConstants` | 错误码映射 | 前端通过 `message.error()` 或 `message.confirm()` 处理 |
+
+**API 生成**：`lm api` 根据后端 Swagger 自动生成前端 API 文件，存放于 `src/api/` 下，按模块分目录。生成后直接使用命名空间导入：
+
+```ts
+import * as XxxApi from '@/api/module/xxx'
+const data = await XxxApi.getXxxPage(queryParams)
+```
+
+详见前端规范文档第 4 节（API 层规范）和第 5~6 节（列表页/表单弹窗规范）。

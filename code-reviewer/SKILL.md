@@ -20,10 +20,13 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 | **返回格式** | 是否使用 `CommonResult<T>` 包装 | 中 |
 | **VO 隔离** | Controller 是否直接返回 DO | 高 |
 
-> **TODO**：前端审查维度预留，后续补充：
-> - 前端 API 调用是否使用 `lm api` 生成的封装
-> - 前端错误处理是否与后端错误码对齐
-> - 前端表单校验是否与后端 `@Valid` 规则一致
+> **前端审查维度**：详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)
+> - API 层：是否使用 `lm api` 生成的命名空间导入（`import * as XxxApi`），禁止直接手写 URL
+> - 表单校验：`FormRules` 是否与后端 `@Valid` 规则一致（必填、格式、长度）
+> - 错误处理：是否统一使用 `useMessage()`，异常捕获是否完整（`try/finally`）
+> - 字典使用：表格中字典列是否使用 `<dict-tag>`，下拉框是否使用 `getIntDictOptions`
+> - 样式规范：是否优先使用 UnoCSS 原子类，组件样式是否加 `scoped`
+> - 权限控制：按钮是否使用 `v-hasPermi`，JS 逻辑中是否使用 `checkPermi`
 
 ## 审查清单
 

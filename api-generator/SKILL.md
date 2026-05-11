@@ -16,7 +16,7 @@ description: Lingman-Starter 框架接口设计生成助手。当用户需要：
 | 响应结构 | 成功/失败返回格式 |
 | 权限标识 | 接口所需权限点 |
 | Swagger 注解 | `@Tag`、`@Operation` 等 |
-| 前端接口定义 | `lm api` 生成的前端 API 封装 | 预留 |
+| 前端接口定义 | `lm api` 生成的前端 API 封装，存放于 `src/api/module/xxx/index.ts` | 自动 |
 
 ## URL 设计规范
 
