@@ -174,9 +174,12 @@ npm install @lingman/cli -g
     "username": "<username>",
     "password": "<password>",
     "hasBase": false
-  }
+  },
+  "fileOverride": false
 }
 ```
+
+- `fileOverride`：控制是否覆盖已存在的文件。`true` — 覆盖更新；`false` — 不覆盖（默认）
 
 在**后端工程根目录**下运行 `lm mapper` 可自动同步 DO/Mapper；在**前端工程根目录**下运行 `lm api` 可根据 Swagger 生成前端接口定义。
 

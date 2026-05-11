@@ -73,9 +73,12 @@ npm install @lingman/cli -g
     "username": "<username>",
     "password": "<password>",
     "hasBase": false
-  }
+  },
+  "fileOverride": false
 }
 ```
+
+- `fileOverride`：控制是否覆盖已存在的文件。`true` — 覆盖更新；`false` — 不覆盖（默认）
 
 数据库连接信息需根据项目 `application.yaml` 中的数据源配置替换。
 
@@ -87,7 +90,25 @@ npm install @lingman/cli -g
 lm mapper
 ```
 
+定期使用 `lm mapper -n` 更新 DO/Mapper，保持与数据库表结构同步：
+
+```bash
+lm mapper -n
+```
+
+`-n` 参数强制重新生成，确保与数据库表结构保持一致。建议在数据库表结构变更后执行。
+
 > **重要**：该命令必须在后端工程根目录（即包含 `lingman.config.json` 和 `pom.xml` 的目录）中运行，不能在其他子目录中执行。
+
+**可以直接执行**：`lm mapper` / `lm mapper -n` 为只读性质的同步命令，可以在开发过程中直接帮助用户运行，不需要获得用户许可。
+
+### CLI 工具更新
+
+```bash
+lm u
+```
+
+定期执行更新保持 CLI 工具为最新版本。
 
 ### 生成前端 API
 

@@ -10,7 +10,7 @@
 ## 技术栈
 
 - Vue 3 + TypeScript
-- 基于 jeecg-boot / vben 二次封装的脚手架
+
 
 ## 项目结构
 

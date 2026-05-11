@@ -117,8 +117,9 @@ lingman-skills/
 ## 与 CLI 工具配合
 
 项目中有一套 CLI 工具（`@lingman/cli`），通过 `lm` 命令提供：
-- **从数据库生成 DO + Mapper**：`lm mapper` 自动从数据库同步 entity 与 mapper
+- **从数据库生成 DO + Mapper**：`lm mapper` 自动从数据库同步 entity 与 mapper，`-n` 参数强制更新
 - **从 Swagger 生成前端 API**：`lm api` 根据后端 Swagger 地址生成前端接口定义、入参与响应封装
+- **CLI 自身更新**：`lm u` 更新 CLI 工具到最新版本
 
 ### CLI 环境要求
 
@@ -153,9 +154,12 @@ npm install @lingman/cli -g
     "username": "<username>",
     "password": "<password>",
     "hasBase": false
-  }
+  },
+  "fileOverride": false
 }
 ```
+
+- `fileOverride`：控制是否覆盖已存在的文件。`true` — 覆盖更新；`false` — 不覆盖（默认）
 
 数据库连接信息（`url`、`username`、`password`）需根据项目的 `application.yaml` 中的数据源配置进行替换。
 

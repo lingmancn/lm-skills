@@ -7,7 +7,10 @@ description: Lingman-Starter 框架文档问答助手。当用户需要：(1) �
 
 ## 知识范围
 
-本 Skill 基于 `lingman-core/api-docs/` 下的 API 文档回答框架使用问题。
+本 Skill 基于以下内容回答问题：
+- `lingman-core/api-docs/` 下的 API 文档
+- `lm` CLI 工具的安装、配置与使用
+- 框架规范与配置说明
 
 ## 回答原则
 
@@ -23,9 +26,63 @@ description: Lingman-Starter 框架文档问答助手。当用户需要：(1) �
 - "PermissionApi 的 hasAnyPermissions 返回什么？"
 - "DeptApi 的 validateDeptList 什么时候抛异常？"
 
+## CLI 工具问答
+
+用户可能询问 `lm` CLI 工具相关问题，以下为常见问答：
+
+### 安装
+
+```bash
+npm config set registry https://registry.npmmirror.com/
+npm config set @lingman:registry=https://git.lingman.tech:8081/repository/npm_hosted/
+npm install @lingman/cli -g
+```
+
+### 常用命令
+
+| 命令 | 说明 | 运行目录 |
+|------|------|---------|
+| `lm init java` | 初始化项目配置，生成 `lingman.config.json` | 后端工程根目录 |
+| `lm mapper` | 从数据库自动同步 DO 和 Mapper | 后端工程根目录 |
+| `lm api` | 根据 Swagger 生成前端接口定义、入参与响应封装 | 前端工程根目录 |
+| `lm u` | 更新 CLI 工具到最新版本 | 任意目录 |
+
+**`lm mapper` 高级用法**：
+
+```bash
+# 定期使用：更新 DO/Mapper（推荐定期执行以同步数据库变更）
+lm mapper -n
+```
+
+`-n` 参数强制重新生成，确保与数据库表结构保持同步。建议在数据库表结构变更后执行。
+
+### 配置文件格式
+
+项目根目录需存在 `lingman.config.json`：
+
+```json
+{
+  "lang": "java",
+  "template": "",
+  "db": {
+    "url": "jdbc:postgresql://<host>:<port>/<database>",
+    "username": "<username>",
+    "password": "<password>",
+    "hasBase": false
+  },
+  "fileOverride": false
+}
+```
+
+- `fileOverride`：控制是否覆盖已存在的文件。`true` — 覆盖更新；`false` — 不覆盖（默认）
+
+数据库连接信息需根据项目 `application.yaml` 中的数据源配置替换。
+
 ## 参考文档
 
 | 场景 | 参考文档 |
 |------|----------|
 | 所有 API 文档 | [lingman-core/api-docs/](../lingman-core/api-docs/) |
 | API 索引 | [api-index.md](references/api-index.md) |
+| 框架规范 | [framework.md](../lingman-core/framework.md) |
+| CLI 工具安装与配置 | [README.md](../README.md) |
