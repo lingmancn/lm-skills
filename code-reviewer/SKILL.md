@@ -21,10 +21,22 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 | **VO 隔离** | Controller 是否直接返回 DO | 高 |
 
 > **前端审查维度**：详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)
-> - API 层：是否使用 `lm api` 生成的命名空间导入（`import * as XxxApi`），禁止直接手写 URL
+> - API 层：是否从 `api/auto/` 导入自动生成的 API 对象（`import { ApiAppXxxAppAdminApiAuto }`），禁止直接手写 URL
+> - **API 自动生成文件保护**：`src/api/auto/` 下的文件是否为命令自动生成，是否存在手动修改的痕迹（如手动增删接口、调整参数类型等）
+> - 列表页：是否使用 `useTable` hook 管理列表状态，而非手动维护 `loading`/`total`/`list`
 > - 表单校验：`FormRules` 是否与后端 `@Valid` 规则一致（必填、格式、长度）
-> - 错误处理：是否统一使用 `useMessage()`，异常捕获是否完整（`try/finally`）
-> - 字典使用：表格中字典列是否使用 `<dict-tag>`，下拉框是否使用 `getIntDictOptions`
+> - 错误处理：是否使用 `useMessage()` 或 `ElMessage`/`ElMessageBox`，异常捕获是否完整（`try/finally`）
+> - 字典使用：表格中字典列是否使用 `<DictTag>`，下拉框是否使用 `getDictOptions` / `getIntDictOptions`
+> - **组件/工具优先使用 `@lingman/yd`**：
+>   - 列表表格是否优先使用 `<Table>` 组件，而非直接使用 `<el-table>`
+>   - 弹窗是否优先使用 `<Dialog>` 组件（或 `el-dialog`），避免自己封装弹窗
+>   - 日期格式化是否优先使用 `formatDate` / `dateFormatter`，避免手写日期转换
+>   - 文件下载是否优先使用 `download.excel` / `download.word` 等，避免自己封装下载
+>   - 字典查询是否优先使用 `getDictOptions` / `getDictLabel`，避免自己写字典查询逻辑
+>   - 表单校验是否优先使用 `useValidator()` 的 `required()` / `lengthRange()`，避免自己写通用校验规则
+>   - UUID/随机字符串是否优先使用 `generateUUID()` / `generateRandomStr()`，避免自己写生成逻辑
+>   - 树形操作是否优先使用 `eachTree` / `findNode` / `treeToList`，避免自己写树遍历
+>   - Token 操作是否优先使用 `getAccessToken()` / `setToken()`，避免自己写 Token 读写
 > - 样式规范：是否优先使用 UnoCSS 原子类，组件样式是否加 `scoped`
 > - 权限控制：按钮是否使用 `v-hasPermi`，JS 逻辑中是否使用 `checkPermi`
 

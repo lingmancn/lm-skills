@@ -73,9 +73,65 @@ public interface DictTypeConstants {
 }
 ```
 
+## 前端字典使用
+
+前端优先使用 `@lingman/yd` 提供的字典工具：
+
+### 下拉框选项
+
+```ts
+import { getIntDictOptions, getStrDictOptions, getBoolDictOptions } from '@lingman/yd'
+
+// 整数型字典（最常用）
+const options = getIntDictOptions('out_type_enum')
+
+// 字符串型字典
+const options = getStrDictOptions('system_user_sex')
+
+// 布尔型字典
+const options = getBoolDictOptions('xxx_bool_enum')
+```
+
+```vue
+<el-select v-model="queryParams.status" clearable placeholder="请选择状态">
+  <el-option
+    v-for="dict in getIntDictOptions('out_type_enum')"
+    :key="dict.value"
+    :label="dict.label"
+    :value="dict.value"
+  />
+</el-select>
+```
+
+### 表格中显示字典标签
+
+```vue
+<template #status="{ row }">
+  <DictTag :type="DICT_TYPE.COMMON_STATUS" :value="row.status" />
+</template>
+```
+
+### 获取字典标签文本
+
+```ts
+import { getDictLabel } from '@lingman/yd'
+
+const label = getDictLabel('out_type_enum', row.outType)
+```
+
+### 常量定义（项目内）
+
+在 `src/constants/dict.ts` 中定义字典类型常量：
+
+```ts
+export const DICT_TYPE_ALARM_LEVEL = 'alarm_level_enum'
+export const DICT_TYPE_COMMON_STATUS = 'common_status'
+```
+
 ## 参考文档
 
 | 场景 | 参考文档 |
 |------|----------|
 | 字典配置示例 | [dict-examples.md](references/dict-examples.md) |
 | 框架规范 | [framework.md](../lingman-core/framework.md) |
+| 前端规范 | [frontend-spec.md](../lingman-core/frontend/frontend-spec.md) |

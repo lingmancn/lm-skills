@@ -247,16 +247,29 @@ lm api
 | 后端输出 | 前端对接 | 规范 |
 |----------|---------|------|
 | `SaveReqVO` 字段 + `@Valid` 注解 | 表单弹窗 `XxxForm.vue` | `el-form` + `FormRules`，校验规则与后端注解保持一致 |
-| `RespVO` 字段 | 表格列配置 `TableColumn[]` | 日期列用 `formatter: dateFormatter`，字典列用 `dict-tag` |
-| `PageReqVO` 字段 | 搜索表单 `queryParams` | 初始值统一为 `undefined`，分页参数使用 `PageParam` |
-| `CommonResult<T>` | API 响应处理 | 统一使用 `useMessage()` 进行成功/错误提示 |
-| `ErrorCodeConstants` | 错误码映射 | 前端通过 `message.error()` 或 `message.confirm()` 处理 |
+| `RespVO` 字段 | 表格列配置 `TableColumn[]` | 日期列用 `formatDate` / `dateFormatter`，字典列用 `<DictTag>` |
+| `PageReqVO` 字段 | 搜索表单 `queryParams` | 初始值统一为 `undefined`，分页由 `useTable` 自动管理 |
+| `CommonResult<T>` | API 响应处理 | 统一使用 `useMessage()` 或 `ElMessage` 进行成功/错误提示 |
+| `ErrorCodeConstants` | 错误码映射 | 前端通过 `message.error()` 或 `ElMessageBox.confirm()` 处理 |
 
-**API 生成**：`lm api` 根据后端 Swagger 自动生成前端 API 文件，存放于 `src/api/` 下，按模块分目录。生成后直接使用命名空间导入：
+**API 生成**：`lm api` 根据后端 Swagger 自动生成前端 API 文件，存放于 `src/api/` 下，按模块分目录。手写扩展的 API 也统一放在 `src/api/` 下。生成后按对象导入：
 
 ```ts
-import * as XxxApi from '@/api/module/xxx'
-const data = await XxxApi.getXxxPage(queryParams)
+import { ApiAppXxxAppAdminApiAuto } from '@/api/app/xxx'
+const data = await ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi(queryParams)
 ```
 
-详见前端规范文档第 4 节（API 层规范）和第 5~6 节（列表页/表单弹窗规范）。
+**列表页**：使用 `useTable` hook 自动管理 `loading`、`total`、`tableList`、`pageSize`、`currentPage`：
+
+```ts
+const { register, tableObject, methods } = useTable({
+  getListApi: (params) => ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi({ ...queryParams, ...params })
+})
+```
+
+**组件/工具优先使用 `@lingman/yd`**：
+- 组件：`ContentWrap`、`Table`、`Dialog`、`Icon`、`DictTag`、`Form`、`XButton` 等
+- Hooks：`useTable`、`useMessage`、`useForm`、`useCrudSchemas`
+- 工具：`formatDate`、`dateFormatter`、`download.excel`、`getDictOptions`
+
+详见前端规范文档第 4 节（API 层规范）、第 5~6 节（列表页/表单弹窗规范）和第 13 节（`@lingman/yd` 插件规范）。

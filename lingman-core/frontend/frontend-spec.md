@@ -19,10 +19,11 @@
 - [10. 状态管理规范（Pinia）](#10-状态管理规范pinia)
 - [11. 样式规范](#11-样式规范)
 - [12. 组件使用规范（Table / Dialog / Icon 等）](#12-组件使用规范)
-- [13. TypeScript 规范](#13-typescript-规范)
-- [14. 常量与枚举规范](#14-常量与枚举规范)
-- [15. 日期时间规范](#15-日期时间规范)
-- [16. 代码质量规范](#16-代码质量规范)
+- [13. `@lingman/yd` 插件规范](#13-lingmanyd-插件规范)
+- [14. TypeScript 规范](#14-typescript-规范)
+- [15. 常量与枚举规范](#15-常量与枚举规范)
+- [16. 日期时间规范](#16-日期时间规范)
+- [17. 代码质量规范](#17-代码质量规范)
 
 ---
 
@@ -31,13 +32,14 @@
 | 分类 | 技术 | 版本 |
 |------|------|------|
 | 框架 | Vue 3 | 3.5.x |
-| 构建工具 | Vite | 4.x |
+| 构建工具 | Vite | 4.x / 5.x |
 | UI 组件库 | Element Plus | 2.11.x |
+| 业务组件/工具 | `@lingman/yd` | 0.0.39+ |
 | 类型检查 | TypeScript | - |
 | 原子化 CSS | UnoCSS | - |
 | 状态管理 | Pinia | 2.x |
 | 路由 | Vue Router | 4.x |
-| HTTP 请求 | Axios（封装） | 1.9.x |
+| HTTP 请求 | Axios（封装于 `@lingman/yd`） | 1.9.x |
 | 国际化 | vue-i18n | 9.x |
 | 工具库 | lodash-es、dayjs、VueUse | - |
 | 图标 | @iconify/iconify + Element Plus Icons | - |
@@ -48,16 +50,21 @@
 
 ```
 src/
-├── api/              # 接口层，按业务模块分目录
-│   └── system/
-│       └── user/
-│           └── index.ts
+├── api/              # API 层（自动生成 + 手写扩展统一存放）
+│   ├── app/          # app 模块 API
+│   │   └── detection-task.ts
+│   ├── infra/        # infra 模块 API
+│   ├── system/       # system 模块 API
+│   │   └── user/
+│   │       └── index.ts
+│   └── types/        # API 类型定义（.d.ts）
 ├── assets/           # 静态资源（图片、图标等）
-├── components/       # 全局公共组件
+├── components/       # 全局公共组件（项目内自定义）
 │   └── XxxComponent/
 │       ├── index.ts  # 组件导出入口
 │       └── src/      # 组件实现
 ├── config/           # 全局配置（axios 封装等）
+├── constants/        # 常量/枚举定义
 ├── directives/       # 全局自定义指令
 ├── hooks/            # 组合式函数（Composables）
 │   └── web/
@@ -73,11 +80,9 @@ src/
 ├── types/            # TypeScript 全局类型声明
 ├── utils/            # 工具函数
 └── views/            # 页面视图，按业务模块分目录
-    └── system/
-        └── user/
-            ├── index.vue       # 列表页
-            ├── UserForm.vue    # 新增/修改表单弹窗
-            └── UserImportForm.vue
+    └── detection-task/
+        ├── index.vue            # 列表页
+        └── DetectionTaskForm.vue # 新增/修改表单弹窗
 ```
 
 **规则：**
@@ -146,49 +151,103 @@ const handleStatusChange = () => {} // 状态变更
 
 ## 4. API 层规范
 
-### 4.1 文件结构 使用自动生成api即可 
+### 4.1 API 目录结构
 
-### 4.2 在页面中使用 API （使用自定生成的api）
+所有 API 统一存放在 `src/api/` 下，按**是否自动生成**分为 `auto/` 和手写扩展两类：
 
-必须使用命名空间导入方式，方便追溯来源： 
+```
+api/
+├── auto/                        # 【自动生成】由 `lm api` 命令从后端 Swagger 同步，禁止手动修改
+│   ├── app/
+│   │   └── detection-task.ts
+│   ├── infra/
+│   └── system/
+├── app/                         # 手写扩展（同模块可在此补充）
+├── infra/
+├── system/                      # 手写扩展
+│   └── user/
+│       └── index.ts
+└── types/                       # API 类型定义（.d.ts）
+    └── app/
+        └── detection-task.d.ts
+```
 
-const data = await UserApi.getUserPage(queryParams)
-await UserApi.deleteUser(id)
+| 类型 | 目录 | 维护方式 | 规则 |
+|------|------|----------|------|
+| **自动生成** | `src/api/auto/` | `lm api` 命令生成并覆盖 | **禁止手动修改**，每次执行命令会全量覆盖 |
+| **手写扩展** | `src/api/` 下除 `auto/` 外的其他目录 | 开发者自行维护 | 按需编写，不会被命令覆盖 |
 
+> ⚠️ **强制规则**：`src/api/auto/` 下的所有文件由 `lm api` 命令自动生成和覆盖，**不允许手动调整其中的接口**。如需扩展或修正，请在 `src/api/` 下的对应模块目录中手写补充文件。
+
+### 4.2 API 对象导入方式
+
+从 `api/auto/{module}/xxx.ts` 导入自动生成的 API 对象：
+
+```ts
+import { ApiAppDetectionTaskAppAdminApiAuto } from '@/api/auto/app/detection-task'
+```
+
+**调用方式**：通过 API 对象上的方法直接调用，方法内部已封装 `Get/Post/Put/Delete`：
+
+```ts
+// 分页查询
+const res = await ApiAppDetectionTaskAppAdminApiAuto.pageDetectionTaskAppAdminApi({
+  taskName: '测试',
+  pageNo: 1,
+  pageSize: 10
+})
+
+// 创建
+await ApiAppDetectionTaskAppAdminApiAuto.createDetectionTaskAppAdminApi(data)
+
+// 更新
+await ApiAppDetectionTaskAppAdminApiAuto.updateDetectionTaskAppAdminApi(data)
+
+// 删除
+await ApiAppDetectionTaskAppAdminApiAuto.deleteDetectionTaskAppAdminApi({ id })
+
+// 详情查询
+const detail = await ApiAppDetectionTaskAppAdminApiAuto.getDetectionTaskAppAdminApi({ id })
+```
+
+### 4.3 HTTP 方法来源
+
+`Get`、`Post`、`Put`、`Delete` 等 HTTP 方法由 `@lingman/yd` 提供，无需额外导入。API 自动生成文件内部已使用这些方法封装。
+
+### 4.4 类型定义（可选）
+
+如需提取 API 参数或响应类型，使用 `api/types/` 下的 `.d.ts` 文件：
+
+```ts
+import type { TriggerDetectionTaskAppAdminApiApiParams } from '@/api/types/app/detection-task'
+```
 
 ## 5. 列表页规范（index.vue）
 
-标准列表页模板结构如下：
+标准列表页使用 `useTable` hook 管理列表状态，模板结构如下：
 
 ### 5.1 Template 结构
 
 ```vue
 <template>
-  <!-- 文档提示（可选） -->
-  <doc-alert title="页面说明" url="https://doc.iocoder.cn/xxx/" />
-
   <!-- 搜索区域 -->
   <ContentWrap>
-    <el-form class="-mb-15px" :model="queryParams" ref="queryFormRef" :inline="true" label-width="68px">
-      <!-- 搜索条件 -->
-      <el-form-item label="字段名" prop="fieldName">
-        <el-input
-          v-model="queryParams.fieldName"
-          placeholder="请输入字段名"
-          clearable
-          @keyup.enter="handleQuery"
-          class="!w-240px"
-        />
+    <el-form ref="searchFormRef" :inline="true" :model="queryParams" class="-mb-15px">
+      <el-form-item label="任务名称" prop="taskName">
+        <el-input v-model="queryParams.taskName" clearable placeholder="请输入任务名称" />
       </el-form-item>
-      <!-- 操作按钮 -->
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="queryParams.status" clearable placeholder="请选择状态">
+          <el-option label="启用" :value="0" />
+          <el-option label="禁用" :value="1" />
+        </el-select>
+      </el-form-item>
       <el-form-item>
-        <el-button @click="handleQuery"><Icon icon="ep:search" />搜索</el-button>
-        <el-button @click="resetQuery"><Icon icon="ep:refresh" />重置</el-button>
-        <el-button type="primary" plain @click="openForm('create')" v-hasPermi="['module:business:create']">
-          <Icon icon="ep:plus" /> 新增
+        <el-button @click="handleReset">
+          <Icon class="mr-5px" icon="ep:refresh" />重置
         </el-button>
-        <el-button type="success" plain @click="handleExport" :loading="exportLoading" v-hasPermi="['module:business:export']">
-          <Icon icon="ep:download" />导出
+        <el-button type="primary" plain @click="handleCreate">
+          <Icon class="mr-5px" icon="ep:plus" />新增
         </el-button>
       </el-form-item>
     </el-form>
@@ -196,35 +255,29 @@ await UserApi.deleteUser(id)
 
   <!-- 列表区域 -->
   <ContentWrap>
-    <!-- Table 为二次封装组件，自带分页，通过 :columns 配置列，slot name 为 field 值 -->
     <Table
-      :columns="tableColumns"
-      :data="list"
-      :loading="loading"
-      :pagination="{ total }"
-      v-model:currentPage="queryParams.pageNo"
-      v-model:pageSize="queryParams.pageSize"
+      :columns="columns"
+      :data="tableObject.tableList"
+      :loading="tableObject.loading"
+      :pagination="{ total: tableObject.total }"
+      v-model:pageSize="tableObject.pageSize"
+      v-model:currentPage="tableObject.currentPage"
+      @register="register"
     >
-      <!-- 字典类型列：用 #field 插槽自定义渲染 -->
+      <!-- 自定义列：slot name 为列的 field 值 -->
       <template #status="{ row }">
-        <dict-tag :type="DICT_TYPE.COMMON_STATUS" :value="row.status" />
+        <el-switch :model-value="row.status === 0" @change="(val: boolean) => handleStatusChange(row, val)" />
       </template>
       <!-- 操作列 -->
       <template #action="{ row }">
-        <div class="flex items-center justify-center">
-          <el-button type="primary" link @click="openForm('update', row.id)" v-hasPermi="['module:business:update']">
-            <Icon icon="ep:edit" />修改
-          </el-button>
-          <el-button type="danger" link @click="handleDelete(row.id)" v-hasPermi="['module:business:delete']">
-            <Icon icon="ep:delete" />删除
-          </el-button>
-        </div>
+        <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+        <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
       </template>
     </Table>
   </ContentWrap>
 
   <!-- 表单弹窗 -->
-  <XxxForm ref="formRef" @success="getList" />
+  <XxxForm ref="formRef" @success="methods.getList" />
 </template>
 ```
 
@@ -232,111 +285,84 @@ await UserApi.deleteUser(id)
 
 ```ts
 <script lang="ts" setup>
-// 1. 工具/常量导入
-import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import { checkPermi } from '@/utils/permission'
-import { dateFormatter } from '@/utils/formatTime'
-import download from '@/utils/download'
-import { CommonStatusEnum } from '@/utils/constants'
-
-// 2. API 导入（命名空间方式）
-import * as XxxApi from '@/api/module/xxx'
-
-// 3. 子组件导入
+import { reactive, ref, onMounted, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { TableColumn } from '@/types/table'
 import XxxForm from './XxxForm.vue'
 
-// 4. 组件名声明
-defineOptions({ name: 'ModuleXxx' })
+// 1. API 导入（从 auto 目录的自动生成文件）
+import { ApiAppXxxAppAdminApiAuto } from '@/api/auto/app/xxx'
 
-// 5. Composables
-const message = useMessage()
-const { t } = useI18n()
+// 2. @lingman/yd 工具导入
+import { formatDate } from '@lingman/yd'
 
-// 6. 表格列定义（静态，置于响应式状态之前）
-import type { TableColumn } from '@/types/table'
-const tableColumns: TableColumn[] = [
-  { field: 'id', label: '编号', width: 80 },
-  { field: 'name', label: '名称' },
+// 3. 组件名声明
+defineOptions({ name: 'Xxx' })
+
+// 4. 表格列定义（静态，置于响应式状态之前）
+const columns: TableColumn[] = [
+  { field: 'id', label: 'ID', width: 80 },
+  { field: 'name', label: '名称', minWidth: 150 },
   { field: 'status', label: '状态', width: 100 },
-  // 日期列直接在列配置中使用 formatter，无需插槽
-  { field: 'createTime', label: '创建时间', width: 180, formatter: dateFormatter },
-  { field: 'action', label: '操作', width: 160, fixed: 'right' }
+  { field: 'createTime', label: '创建时间', width: 170, formatter: (_row, _col, val) => val ? formatDate(val) : '' },
+  { field: 'action', label: '操作', width: 200, fixed: 'right' }
 ]
 
-// 7. 响应式状态
-const loading = ref(true)
-const total = ref(0)
-const list = ref([])
+// 5. 搜索参数
 const queryParams = reactive({
-  pageNo: 1,
-  pageSize: 10,
-  // ...业务字段，初始值统一为 undefined
-})
-const queryFormRef = ref()
-
-// 8. 监听分页变化（Table 组件通过 v-model 驱动，需 watch 触发数据刷新）
-watch([() => queryParams.pageNo, () => queryParams.pageSize], () => {
-  getList()
+  name: undefined as string | undefined,
+  status: undefined as number | undefined
 })
 
-// 9. 业务方法
-/** 查询列表 */
-const getList = async () => {
-  loading.value = true
-  try {
-    const data = await XxxApi.getXxxPage(queryParams)
-    list.value = data.list
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
-}
-
-/** 搜索按钮操作 */
-const handleQuery = () => {
-  queryParams.pageNo = 1
-  getList()
-}
-
-/** 重置按钮操作 */
-const resetQuery = () => {
-  queryFormRef.value?.resetFields()
-  handleQuery()
-}
-
-/** 添加/修改操作 */
+const searchFormRef = ref()
 const formRef = ref()
-const openForm = (type: string, id?: number) => {
-  formRef.value.open(type, id)
+
+// 6. useTable hook：自动管理 loading、total、list、分页
+const { register, tableObject, methods } = useTable({
+  getListApi: (params) =>
+    ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi({
+      ...queryParams,
+      ...params
+    })
+})
+methods.getList()
+
+// 7. 搜索（自动防抖）
+const handleQuery = () => {
+  methods.setSearchParams({ ...queryParams })
 }
 
-/** 删除按钮操作 */
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+watch(queryParams, () => {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(handleQuery, 300)
+})
+
+// 8. 重置
+const handleReset = () => {
+  searchFormRef.value?.resetFields()
+  methods.setSearchParams({})
+}
+
+// 9. 新增/编辑
+const handleCreate = () => {
+  formRef.value?.open('create')
+}
+const handleEdit = (row: any) => {
+  formRef.value?.open('update', row)
+}
+
+// 10. 删除
 const handleDelete = async (id: number) => {
-  try {
-    await message.delConfirm()
-    await XxxApi.deleteXxx(id)
-    message.success(t('common.delSuccess'))
-    await getList()
-  } catch {}
+  await ElMessageBox.confirm('确认删除吗？', '提示', { type: 'warning' })
+  await ApiAppXxxAppAdminApiAuto.deleteXxxAppAdminApi({ id })
+  ElMessage.success('删除成功')
+  methods.getList()
 }
 
-/** 导出按钮操作 */
-const exportLoading = ref(false)
-const handleExport = async () => {
-  try {
-    await message.exportConfirm()
-    exportLoading.value = true
-    const data = await XxxApi.exportXxx(queryParams)
-    download.excel(data, 'xxx数据.xls')
-  } catch {
-  } finally {
-    exportLoading.value = false
-  }
-}
-
-// 10. 生命周期
+// 11. 生命周期
 onMounted(() => {
-  getList()
+  // 加载字典、选项等
 })
 </script>
 ```
@@ -349,93 +375,100 @@ onMounted(() => {
 
 ```vue
 <template>
-  <Dialog v-model="dialogVisible" :title="dialogTitle">
-    <el-form
-      ref="formRef"
-      v-loading="formLoading"
-      :model="formData"
-      :rules="formRules"
-      label-width="80px"
-    >
-      <el-form-item label="字段名" prop="fieldName">
-        <el-input v-model="formData.fieldName" placeholder="请输入字段名" />
+  <el-dialog
+    v-model="visible"
+    :title="title"
+    width="800px"
+    destroy-on-close
+    draggable
+    @close="handleClose"
+  >
+    <el-form ref="formRef" :model="formData" :rules="rules" label-width="90px">
+      <el-form-item label="名称" prop="name" required>
+        <el-input v-model="formData.name" placeholder="请输入名称" />
+      </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="formData.status" style="width: 100%">
+          <el-option label="启用" :value="0" />
+          <el-option label="禁用" :value="1" />
+        </el-select>
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button :disabled="formLoading" type="primary" @click="submitForm">确 定</el-button>
-      <el-button @click="dialogVisible = false">取 消</el-button>
+      <el-button @click="visible = false">取 消</el-button>
+      <el-button type="primary" :loading="submitting" @click="submitForm">确 定</el-button>
     </template>
-  </Dialog>
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import * as XxxApi from '@/api/module/xxx'
-import { FormRules } from 'element-plus'
+import { reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ApiAppXxxAppAdminApiAuto } from '@/api/app/xxx'
 
-defineOptions({ name: 'ModuleXxxForm' })
-
-const { t } = useI18n()
-const message = useMessage()
-
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const formLoading = ref(false)
-const formType = ref('')   // 'create' | 'update'
-const formData = ref({
-  id: undefined,
-  // ...业务字段初始值
-})
-const formRules = reactive<FormRules>({
-  fieldName: [{ required: true, message: '字段名不能为空', trigger: 'blur' }]
-})
-const formRef = ref()
-
-/** 打开弹窗 */
-const open = async (type: string, id?: number) => {
-  dialogVisible.value = true
-  dialogTitle.value = type === 'create' ? '新增XXX' : '修改XXX'
-  formType.value = type
-  resetForm()
-  if (id) {
-    formLoading.value = true
-    try {
-      formData.value = await XxxApi.getXxx(id)
-    } finally {
-      formLoading.value = false
-    }
-  }
-}
-defineExpose({ open }) // 暴露给父组件调用
+defineOptions({ name: 'XxxForm' })
 
 const emits = defineEmits(['success'])
 
-/** 提交表单 */
+const visible = ref(false)
+const title = ref('')
+const formType = ref<'create' | 'update'>('create')
+const submitting = ref(false)
+const formRef = ref<FormInstance>()
+
+const formData = reactive({
+  id: undefined as number | undefined,
+  name: '',
+  status: 0
+})
+
+const rules = reactive<FormRules>({
+  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }]
+})
+
+/** 打开弹窗 */
+const open = (type: 'create' | 'update', row?: any) => {
+  visible.value = true
+  formType.value = type
+  title.value = type === 'create' ? '新增' : '修改'
+  resetForm()
+  if (row) {
+    Object.assign(formData, row)
+  }
+}
+defineExpose({ open })
+
+/** 提交 */
 const submitForm = async () => {
-  await formRef.value.validate()
-  formLoading.value = true
+  await formRef.value?.validate()
+  submitting.value = true
   try {
-    const data = formData.value
     if (formType.value === 'create') {
-      await XxxApi.createXxx(data)
-      message.success(t('common.createSuccess'))
+      await ApiAppXxxAppAdminApiAuto.createXxxAppAdminApi(formData)
+      ElMessage.success('新增成功')
     } else {
-      await XxxApi.updateXxx(data)
-      message.success(t('common.updateSuccess'))
+      await ApiAppXxxAppAdminApiAuto.updateXxxAppAdminApi(formData)
+      ElMessage.success('修改成功')
     }
-    dialogVisible.value = false
+    visible.value = false
     emits('success')
   } finally {
-    formLoading.value = false
+    submitting.value = false
   }
 }
 
-/** 重置表单 */
+/** 重置 */
 const resetForm = () => {
-  formData.value = {
-    id: undefined,
-    // ...字段初始值
-  }
+  formData.id = undefined
+  formData.name = ''
+  formData.status = 0
   formRef.value?.resetFields()
+}
+
+/** 关闭回调 */
+const handleClose = () => {
+  resetForm()
 }
 </script>
 ```
@@ -443,10 +476,11 @@ const resetForm = () => {
 ### 6.2 关键规则
 
 - 表单弹窗通过 `defineExpose({ open })` 暴露 `open` 方法，由父组件通过 `ref` 调用。
-- 操作成功后通过 `emits('success')` 通知父组件刷新列表。
-- 提交前必须调用 `formRef.value.validate()` 校验。
-- 弹窗关闭时通过 `resetForm()` 重置数据，避免脏数据。
-- `formLoading` 在整个提交过程中保持 `true`，在 `finally` 中重置。
+- 操作成功后通过 `emits('success')` 通知父组件刷新列表（父组件监听后调用 `methods.getList()`）。
+- 提交前必须调用 `formRef.value?.validate()` 校验。
+- 弹窗关闭时通过 `@close="handleClose"` 重置数据，避免脏数据。
+- `submitting` 在整个提交过程中保持 `true`，在 `finally` 中重置。
+- 编辑时通过 `Object.assign(formData, row)` 回填数据，避免直接引用。
 
 ---
 
@@ -545,30 +579,36 @@ getBoolDictOptions(DICT_TYPE.XXX)
 
 ## 9. 消息提示规范
 
-统一使用 `useMessage()` Hook，不直接调用 `ElMessage` 或 `ElMessageBox`：
+优先使用 `@lingman/yd` 提供的 `useMessage()` Hook：
 
 ```ts
 const message = useMessage()
 
-// 操作成功提示
+// 操作成功/错误提示
 message.success('操作成功')
-message.success(t('common.delSuccess'))
-
-// 错误提示
 message.error('操作失败')
+message.warning('警告信息')
 
-// 删除二次确认（固定用法）
-await message.delConfirm()
+// 删除二次确认
+await message.delConfirm('确认删除该记录吗？')
 
-// 导出二次确认（固定用法）
+// 导出二次确认
 await message.exportConfirm()
 
 // 自定义确认弹窗
-await message.confirm('确认要启用该用户吗?')
+await message.confirm('确认要执行该操作吗?', '提示')
 
 // 输入框弹窗
-const result = await message.prompt('请输入新密码', '提示')
-const password = result.value
+const result = await message.prompt('请输入内容', '提示')
+```
+
+**特殊场景**：当需要在非 setup 上下文或模板中直接使用时，可直接使用 Element Plus 的 `ElMessage` / `ElMessageBox`：
+
+```ts
+import { ElMessage, ElMessageBox } from 'element-plus'
+
+ElMessage.success('删除成功')
+await ElMessageBox.confirm('确认删除吗？', '提示', { type: 'warning' })
 ```
 
 ---
@@ -811,7 +851,7 @@ watch([() => queryParams.pageNo, () => queryParams.pageSize], () => {
 <dict-tag :type="DICT_TYPE.COMMON_STATUS" :value="scope.row.status" />
 ```
 
-### 12.6 DocAlert
+### 12.7 DocAlert
 
 页面顶部文档说明使用 `<doc-alert>`：
 
@@ -821,7 +861,257 @@ watch([() => queryParams.pageNo, () => queryParams.pageSize], () => {
 
 ---
 
-## 13. TypeScript 规范
+## 13. `@lingman/yd` 插件规范
+
+`@lingman/yd` 是封装芋道基础能力的插件，提供组件、Hooks、工具函数。项目通过 `app.use(LingManYd)` 全局注册。
+
+**核心原则：`@lingman/yd` 里已有的功能，业务代码中禁止重复封装，必须优先使用。**
+
+### 13.1 组件清单（47+）
+
+| 分类 | 组件名 | 用途 | 备注 |
+|------|--------|------|------|
+| **布局** | `ContentWrap` | 内容区域包裹卡片 | 列表页/详情页必用 |
+| | `ContentDetailWrap` | 详情页内容包裹 | 详情展示场景 |
+| | `Sticky` | 粘性定位 | 吸顶/吸底 |
+| **表格** | `Table` | 二次封装表格（内置分页） | 列表页必用 |
+| | `TableSelectForm` | 表格弹窗选择 | 关联数据选择 |
+| | `Pagination` | 独立分页 | 非 Table 场景使用 |
+| **表单** | `Form` | 动态 Schema 表单 | 复杂表单场景 |
+| | `Dialog` | 二次封装弹窗 | 表单弹窗 |
+| | `InputPassword` | 密码输入框（带可见切换） | |
+| | `InputWithColor` | 带颜色选择的输入框 | |
+| | `ColorInput` | 颜色选择器 | |
+| | `JsonEditor` | JSON 编辑器 | |
+| | `Editor` | 富文本编辑器（wangEditor） | |
+| | `MarkdownView` | Markdown 渲染 | |
+| | `MagicCubeEditor` | 魔方编辑器 | |
+| | `Crontab` | Cron 表达式选择器 | |
+| | `ShortcutDateRangePicker` | 快捷日期范围选择 | |
+| | `Verify` | 验证码组件（滑块/点选/文字） | |
+| **数据展示** | `Descriptions` | 详情描述列表 | |
+| | `DescriptionsItemLabel` | 描述项标签 | |
+| | `Echart` | ECharts 图表封装 | 需从 `@lingman/yd/components` 导入 |
+| | `CountTo` | 数字滚动动画 | |
+| | `DictTag` | 字典标签 | 表格字典列必用 |
+| | `Highlight` | 代码高亮 | |
+| | `ImageViewer` | 图片预览 | |
+| | `Qrcode` | 二维码生成 | |
+| | `Infotip` | 信息提示气泡 | |
+| | `OperateLogV2` | 操作日志 | |
+| **上传** | `UploadFile` | 文件上传 | 需从 `@lingman/yd/components` 导入 |
+| | `UploadImg` | 单图上传 | 需从 `@lingman/yd/components` 导入 |
+| | `UploadImgs` | 多图上传 | 需从 `@lingman/yd/components` 导入 |
+| | `CropperAvatar` | 头像裁剪上传 | 需从 `@lingman/yd/components` 导入 |
+| | `CropperImage` | 图片裁剪 | 需从 `@lingman/yd/components` 导入 |
+| **选择器** | `DeptSelectForm` | 部门选择弹窗 | |
+| | `UserSelectForm` | 用户选择弹窗 | |
+| | `TableSelectForm` | 表格数据选择弹窗 | |
+| | `AppLinkInput` | 应用链接输入 | |
+| | `AppLinkSelectDialog` | 应用链接选择弹窗 | |
+| | `IconSelect` | 图标选择器 | |
+| | `MapDialog` | 地图选择弹窗 | |
+| **导航/反馈** | `Backtop` | 回到顶部 | |
+| | `DocAlert` | 文档说明提示 | 页面顶部说明 |
+| | `Error` | 错误页面（403/404/500） | |
+| | `RouterSearch` | 路由搜索 | |
+| | `Draggable` | 拖拽排序 | |
+| | `VerticalButtonGroup` | 垂直按钮组 | |
+| | `XButton` / `XTextButton` | 扩展按钮 | |
+| | `CardTitle` | 卡片标题 | |
+| | `IFrame` | iframe 嵌入 | |
+| | `SummaryCard` | 汇总卡片 | |
+| **图标** | `Icon` | 图标组件（支持 ep: 前缀） | `<Icon icon="ep:search" />` |
+
+### 13.2 Hooks 清单（23+）
+
+| Hook | 用途 | 使用场景 |
+|------|------|----------|
+| `useTable` | 列表页状态管理 | **所有列表页必用**，替代手动维护 loading/total/list |
+| `useMessage` | 消息提示封装 | 替代直接使用 `ElMessage` / `ElMessageBox` |
+| `useForm` | 动态表单注册 | 配合 `<Form>` 组件使用 |
+| `useCrudSchemas` | CRUD 四联 Schema 生成 | 搜索+表格+表单+详情一体化配置 |
+| `useValidator` | 表单校验规则生成 | `required()` / `lengthRange()` / `notSpace()` |
+| `useI18n` | 国际化 | 多语言场景 |
+| `useCache` | 本地缓存操作 | `wsCache.get/set/delete` |
+| `useTagsView` | Tab 页签操作 | `closeCurrent` / `refreshPage` / `setTitle` |
+| `useConfigGlobal` | 全局配置读取 | 项目级配置 |
+| `useDesign` | 设计变量/CSS | 主题/变量相关 |
+| `useEmitt` | 事件总线 | 组件间通信 |
+| `useGuide` | 新手引导（driver.js） | 页面引导 |
+| `useIcon` | 图标渲染（VNode） | 动态图标 |
+| `useLocale` | 语言切换 | 国际化 |
+| `useNetwork` | 网络状态监听 | 在线/离线检测 |
+| `useNProgress` | 顶部进度条 | 路由切换等 |
+| `usePageLoading` | 页面加载状态 | |
+| `useScrollTo` | 滚动到指定位置 | 锚点跳转 |
+| `useTimeAgo` | 相对时间（xx 分钟前） | |
+| `useTitle` | 页面标题设置 | |
+| `useWatermark` | 页面水印 | |
+| `useNow` | 实时时钟 | |
+| `usePageLoading` | 页面加载控制 | |
+
+### 13.3 工具函数清单（按分类）
+
+#### 日期时间（优先使用，禁止手写日期转换）
+
+| 函数 | 用途 |
+|------|------|
+| `formatDate(date)` | 格式化为 `YYYY-MM-DD HH:mm:ss` |
+| `formatToDate(date)` | 格式化为 `YYYY-MM-DD` |
+| `formatToDateTime(date)` | 格式化为 `YYYY-MM-DD HH:mm:ss` |
+| `dateFormatter(row, col, val)` | 表格日期列 formatter |
+| `dateFormatter2(row, col, val)` | 表格日期列 formatter（仅日期） |
+| `dateUtil` | dayjs 实例 |
+| `formatPast(date)` | 相对时间（几秒前/几分钟前） |
+| `formatPast2(ms)` | 毫秒转天时分秒 |
+| `formatAxis(date)` | 时间问候语（上午好/下午好） |
+| `beginOfDay(date)` | 当天开始时间 |
+| `endOfDay(date)` | 当天结束时间 |
+| `betweenDay(d1, d2)` | 计算日期间隔天数 |
+| `addTime(date, ms)` | 日期加时间 |
+| `getDateRange(start, end)` | 获取日期范围字符串 |
+| `getDayRange(date, days)` | 获取指定天数范围 |
+| `getLast7Days()` | 最近7天范围 |
+| `getLast30Days()` | 最近30天范围 |
+| `defaultShortcuts` | el-date-picker 快捷选项 |
+
+#### 字典（优先使用，禁止自己写字典查询）
+
+| 函数 | 用途 |
+|------|------|
+| `getDictOptions(dictType)` | 获取字典选项数组 |
+| `getIntDictOptions(dictType)` | 获取整数型字典选项 |
+| `getStrDictOptions(dictType)` | 获取字符串型字典选项 |
+| `getBoolDictOptions(dictType)` | 获取布尔型字典选项 |
+| `getDictLabel(dictType, value)` | 根据值获取字典标签 |
+| `getDictObj(dictType, value)` | 根据值获取字典对象 |
+| `DICT_TYPE` | 系统内置字典类型枚举 |
+
+#### 下载（优先使用，禁止封装新的下载方法）
+
+| 函数 | 用途 |
+|------|------|
+| `download.excel(data, filename)` | 下载 Excel |
+| `download.word(data, filename)` | 下载 Word |
+| `download.zip(data, filename)` | 下载 Zip |
+| `download.html(data, filename)` | 下载 HTML |
+| `download.markdown(data, filename)` | 下载 Markdown |
+| `download.json(data, filename)` | 下载 JSON |
+| `download.image({ url })` | 下载图片 |
+| `download.base64ToFile(base64, filename)` | base64 转 File |
+
+#### 通用工具（优先使用）
+
+| 函数 | 用途 |
+|------|------|
+| `generateUUID()` | 生成 UUID |
+| `generateRandomStr(length)` | 生成指定长度随机字符串 |
+| `copyValueToTarget(target, source)` | 按目标对象属性复制 |
+| `buildSortingField({ prop, order })` | 构建排序字段 |
+| `getUrlValue(key, url)` | 获取 URL 参数 |
+| `trim(str)` | 去除首尾空格 |
+| `firstUpperCase(str)` | 首字母大写 |
+| `jsonParse(str)` | 安全 JSON 解析 |
+| `fileSizeFormatter(row, col, val)` | 文件大小格式化 |
+| `generateAcceptedFileTypes(types)` | 生成 accept 属性值 |
+
+#### 树形数据（优先使用）
+
+| 函数 | 用途 |
+|------|------|
+| `eachTree(tree, callback)` | 遍历树 |
+| `treeToList(tree)` | 树转列表 |
+| `treeMap(tree, config)` | 树映射 |
+| `findNode(tree, func)` | 查找节点 |
+| `findNodeAll(tree, func)` | 查找所有匹配节点 |
+| `findPath(tree, func)` | 查找路径 |
+| `findPathAll(tree, func)` | 查找所有路径 |
+| `filter(tree, func)` | 过滤树 |
+| `forEach(tree, func)` | 遍历树 |
+
+#### 认证/Token（优先使用）
+
+| 函数 | 用途 |
+|------|------|
+| `getAccessToken()` | 获取 accessToken |
+| `getRefreshToken()` | 获取 refreshToken |
+| `setToken(token)` | 设置 token |
+| `removeToken()` | 移除 token |
+| `getTenantId()` | 获取租户 ID |
+| `setTenantId(id)` | 设置租户 ID |
+
+#### 加解密（优先使用）
+
+| 函数 | 用途 |
+|------|------|
+| `encrypt(txt)` / `decrypt(txt)` | RSA 加解密 |
+| `AES.encrypt(data, key)` / `AES.decrypt(data, key)` | AES 加解密 |
+| `ApiEncrypt.encryptRequest(data)` | API 请求加密 |
+| `ApiEncrypt.decryptResponse(data)` | API 响应解密 |
+
+#### 金额/数字（ERP 场景）
+
+| 函数 | 用途 |
+|------|------|
+| `fenToYuan(price)` | 分转元 |
+| `yuanToFen(amount)` | 元转分 |
+| `floatToFixed2(num)` | 保留两位小数 |
+| `formatToFraction(num)` | 分数保留两位小数 |
+| `erpNumberFormatter(num, digit)` | ERP 数字格式化 |
+| `erpCountInputFormatter(num)` | ERP 数量格式化 |
+| `erpPriceInputFormatter(num)` | ERP 金额格式化 |
+| `erpCalculatePercentage(value, total)` | ERP 百分比计算 |
+
+### 13.4 HTTP 方法
+
+| 方法 | 用途 |
+|------|------|
+| `Get(url, data, options)` | GET 请求 |
+| `Post(url, data, options)` | POST 请求 |
+| `Put(url, data, options)` | PUT 请求 |
+| `Delete(url, data, options)` | DELETE 请求 |
+| `Request(config)` | 通用请求 |
+
+> 一般情况下不需要直接使用这些方法，API 自动生成文件内部已封装。
+
+### 13.5 优先使用 `@lingman/yd` 的典型场景
+
+以下场景 `@lingman/yd` 已有实现，业务代码中**优先使用**，避免重复封装：
+
+| 场景 | 优先使用 `@lingman/yd` |
+|------|----------------------|
+| 列表页状态管理（`loading`/`total`/`list`） | `useTable({ getListApi })` |
+| 消息提示（`message`/`confirm`/`alert`） | `useMessage()` |
+| 日期格式化 | `formatDate` / `dateFormatter` / `dateUtil` |
+| 字典查询/转换 | `getDictOptions` / `getDictLabel` / `<DictTag>` |
+| 文件下载 | `download.excel` / `download.word` 等 |
+| 表单校验规则（必填/长度/空格） | `useValidator()` 的 `required`/`lengthRange`/`notSpace` |
+| 表格组件 | `<Table>` 组件 |
+| 弹窗组件 | `<Dialog>` 组件 |
+| UUID/随机字符串生成 | `generateUUID()` / `generateRandomStr()` |
+| Token 读写 | `getAccessToken()` / `setToken()` / `removeToken()` |
+| 树形数据遍历/查找 | `eachTree` / `findNode` / `treeToList` 等 |
+| 金额分转元/元转分 | `fenToYuan` / `yuanToFen` |
+
+### 13.6 导入方式
+
+**自动导入**（通过 `unplugin-auto-import`，无需手动 import）：
+- 所有 Hooks：`useTable`、`useMessage`、`useForm`、`useI18n` 等
+- 大部分工具函数：`formatDate`、`generateUUID`、`getDictOptions` 等
+
+**手动导入**（需要从 `@lingman/yd` 或 `@lingman/yd/components` 显式 import）：
+```ts
+// 部分组件
+import { Echart, CropperAvatar, UploadFile } from '@lingman/yd/components'
+
+// 部分工具
+import { formatDate, download } from '@lingman/yd'
+```
+
+---
+
+## 14. TypeScript 规范
 
 ### 13.1 VO 类型定义
 
@@ -914,18 +1204,24 @@ if (row.status === 0) { ... }
 
 ### 15.1 表格中格式化
 
-```vue
-<el-table-column
-  label="创建时间"
-  align="center"
-  prop="createTime"
-  :formatter="dateFormatter"
-  width="180"
-/>
-```
+优先使用 `@lingman/yd` 的 `formatDate` 函数：
 
 ```ts
-import { dateFormatter } from '@/utils/formatTime'
+import { formatDate } from '@lingman/yd'
+
+const columns: TableColumn[] = [
+  { field: 'createTime', label: '创建时间', width: 170, formatter: (_row, _col, val) => val ? formatDate(val) : '' }
+]
+```
+
+也可使用 `dateFormatter`（表格通用 formatter）：
+
+```ts
+import { dateFormatter } from '@lingman/yd'
+
+const columns: TableColumn[] = [
+  { field: 'createTime', label: '创建时间', width: 180, formatter: dateFormatter }
+]
 ```
 
 ### 15.2 日期选择器
@@ -943,12 +1239,15 @@ import { dateFormatter } from '@/utils/formatTime'
 
 ### 15.3 日期处理
 
-使用 `dayjs` 处理日期，不使用原生 `Date` 操作：
+使用 `@lingman/yd` 提供的 `dateUtil`（即 dayjs）处理日期：
 
 ```ts
-import dayjs from 'dayjs'
+import { dateUtil, formatDate, formatToDateTime } from '@lingman/yd'
 
-dayjs(date).format('YYYY-MM-DD HH:mm:ss')
+formatDate(date)                    // 2024-01-01 12:00:00
+formatToDateTime(date)              // 同上
+formatToDate(date)                  // 2024-01-01
+dateUtil(date).format('YYYY-MM-DD') // 灵活格式化
 ```
 
 ---
