@@ -242,34 +242,239 @@ lm api
 
 ## 前端对接
 
-前端开发规范详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)，核心要点：
+本 Skill 生成前端页面时，必须严格遵守以下规范。所有规范来源于 `lingman-core/frontend/frontend-spec.md`，此处内联完整模板以保证生效。
 
-| 后端输出 | 前端对接 | 规范 |
-|----------|---------|------|
-| `SaveReqVO` 字段 + `@Valid` 注解 | 表单弹窗 `XxxForm.vue` | `el-form` + `FormRules`，校验规则与后端注解保持一致 |
-| `RespVO` 字段 | 表格列配置 `TableColumn[]` | 日期列用 `formatDate` / `dateFormatter`，字典列用 `<DictTag>` |
-| `PageReqVO` 字段 | 搜索表单 `queryParams` | 初始值统一为 `undefined`，分页由 `useTable` 自动管理 |
-| `CommonResult<T>` | API 响应处理 | 统一使用 `useMessage()` 或 `ElMessage` 进行成功/错误提示 |
-| `ErrorCodeConstants` | 错误码映射 | 前端通过 `message.error()` 或 `ElMessageBox.confirm()` 处理 |
+### 强制规则
 
-**API 生成**：`lm api` 根据后端 Swagger 自动生成前端 API 文件，存放于 `src/api/` 下，按模块分目录。手写扩展的 API 也统一放在 `src/api/` 下。生成后按对象导入：
+1. **列表页必须使用 `useTable` hook 管理状态**，禁止手动维护 `loading`/`total`/`tableList`。
+2. **列表页必须使用 `<Table>` 组件**，禁止直接使用 `<el-table>`。
+3. **列表页搜索区和表格区必须分别包裹在 `<ContentWrap>` 中**。
+4. **表单弹窗必须使用 `<Dialog>` 组件**，禁止直接使用 `<el-dialog>`。
+5. **优先使用 `@lingman/yd` 提供的组件和 Hooks**，已有功能禁止重复封装。
+6. **API 文件优先引用 `src/api/auto/` 下的自动生成对象**；仅当手写扩展时才使用 `src/api/` 下的自定义路径。
 
-```ts
-import { ApiAppXxxAppAdminApiAuto } from '@/api/app/xxx'
-const data = await ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi(queryParams)
-```
+### 列表页标准模板（index.vue）
 
-**列表页**：使用 `useTable` hook 自动管理 `loading`、`total`、`tableList`、`pageSize`、`currentPage`：
+```vue
+<template>
+  <!-- 搜索区域 -->
+  <ContentWrap>
+    <el-form ref="searchFormRef" :inline="true" :model="queryParams" class="-mb-15px">
+      <!-- 搜索项由业务字段决定，使用 el-input / el-select / el-date-picker 等 -->
+      <el-form-item>
+        <el-button @click="handleReset">
+          <Icon class="mr-5px" icon="ep:refresh" />重置
+        </el-button>
+        <el-button type="primary" @click="handleCreate">
+          <Icon class="mr-5px" icon="ep:plus" />新增
+        </el-button>
+      </el-form-item>
+    </el-form>
+  </ContentWrap>
 
-```ts
-const { register, tableObject, methods } = useTable({
-  getListApi: (params) => ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi({ ...queryParams, ...params })
+  <!-- 列表区域 -->
+  <ContentWrap>
+    <Table
+      :columns="columns"
+      :data="tableObject.tableList"
+      :loading="tableObject.loading"
+      :pagination="{ total: tableObject.total }"
+      v-model:pageSize="tableObject.pageSize"
+      v-model:currentPage="tableObject.currentPage"
+      @register="register"
+    >
+      <!-- 自定义列：slot name 为列的 field 值 -->
+      <template #status="{ row }">
+        <DictTag :type="DICT_TYPE.COMMON_STATUS" :value="row.status" />
+      </template>
+      <!-- 操作列 -->
+      <template #action="{ row }">
+        <el-button type="primary" @click="handleEdit(row)">编辑</el-button>
+        <el-button type="danger" @click="handleDelete(row)">删除</el-button>
+      </template>
+    </Table>
+  </ContentWrap>
+
+  <!-- 表单弹窗 -->
+  <XxxForm ref="formRef" @success="methods.getList" />
+</template>
+
+<script lang="ts" setup>
+import { reactive, ref, onMounted } from 'vue'
+import type { TableColumn } from '@/types/table'
+import XxxForm from './XxxForm.vue'
+
+// 1. API 导入（优先使用 auto 目录的自动生成文件）
+import { ApiAppXxxAppAdminApiAuto } from '@/api/auto/app/xxx'
+
+// 2. @lingman/yd 工具导入
+import { formatDate, DICT_TYPE } from '@lingman/yd'
+
+// 3. 组件名声明
+defineOptions({ name: 'Xxx' })
+
+// 4. 表格列定义（静态，置于响应式状态之前）
+const columns: TableColumn[] = [
+  { field: 'name', label: '名称', minWidth: 150 },
+  { field: 'status', label: '状态', width: 100 },
+  { field: 'createTime', label: '创建时间', width: 170, formatter: (_row, _col, val) => val ? formatDate(val) : '' },
+  { field: 'action', label: '操作', width: 200, fixed: 'right' }
+]
+
+// 5. 搜索参数
+const queryParams = reactive({
+  name: undefined as string | undefined,
+  status: undefined as number | undefined
 })
+
+const searchFormRef = ref()
+const formRef = ref()
+
+// 6. useTable hook：自动管理 loading、total、list、分页
+const { register, tableObject, methods } = useTable({
+  getListApi: (params) =>
+    ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi({
+      ...queryParams,
+      ...params
+    })
+})
+methods.getList()
+
+// 7. 搜索与重置
+const handleQuery = () => {
+  methods.setSearchParams({ ...queryParams })
+}
+
+const handleReset = () => {
+  searchFormRef.value?.resetFields()
+  methods.setSearchParams({})
+}
+
+// 8. 新增/编辑
+const handleCreate = () => {
+  formRef.value?.open('create')
+}
+const handleEdit = (row: any) => {
+  formRef.value?.open('update', row)
+}
+
+// 9. 删除
+const handleDelete = async (row: any) => {
+  await message.delConfirm('确认删除该记录吗？')
+  await ApiAppXxxAppAdminApiAuto.deleteXxxAppAdminApi({ id: row.id })
+  message.success('删除成功')
+  methods.getList()
+}
+
+onMounted(() => {
+  // 加载字典、选项等初始化逻辑
+})
+</script>
 ```
 
-**组件/工具优先使用 `@lingman/yd`**：
-- 组件：`ContentWrap`、`Table`、`Dialog`、`Icon`、`DictTag`、`Form`、`XButton` 等
-- Hooks：`useTable`、`useMessage`、`useForm`、`useCrudSchemas`
-- 工具：`formatDate`、`dateFormatter`、`download.excel`、`getDictOptions`
+### 表单弹窗标准模板（XxxForm.vue）
 
-详见前端规范文档第 4 节（API 层规范）、第 5~6 节（列表页/表单弹窗规范）和第 13 节（`@lingman/yd` 插件规范）。
+> **说明**：新增/编辑表单**必须使用 `<Form>` 组件**（基于 Schema 的动态表单）。列表页的搜索表单仍使用原生 `el-form`。
+
+```vue
+<template>
+  <Dialog v-model="visible" :title="title" width="680px">
+    <Form ref="formRef" :schema="schema" :rules="rules" label-width="90px" />
+    <template #footer>
+      <el-button @click="visible = false">取 消</el-button>
+      <el-button type="primary" :loading="submitting" @click="submitForm">确 定</el-button>
+    </template>
+  </Dialog>
+</template>
+
+<script lang="ts" setup>
+import { reactive, ref } from 'vue'
+import type { FormRules } from 'element-plus'
+import type { FormSchema } from '@/types/form'
+import type { FormExpose } from '@/components/Form'
+import { ApiAppXxxAppAdminApiAuto } from '@/api/auto/app/xxx'
+
+defineOptions({ name: 'XxxForm' })
+
+const emits = defineEmits(['success'])
+
+const visible = ref(false)
+const title = ref('')
+const formType = ref<'create' | 'update'>('create')
+const submitting = ref(false)
+const formRef = ref<FormExpose>()
+
+const schema = reactive<FormSchema[]>([
+  { field: 'name', label: '名称', component: 'Input' },
+  { field: 'code', label: '编码', component: 'Input' },
+  { field: 'status', label: '状态', component: 'Radio', componentProps: { options: [{ label: '启用', value: 1 }, { label: '禁用', value: 0 }] } },
+  { field: 'remark', label: '备注', component: 'Input', componentProps: { type: 'textarea', rows: 3 } }
+])
+
+const rules = reactive<FormRules>({
+  name: [{ required: true, message: '名称不能为空', trigger: 'blur' }],
+  code: [{ required: true, message: '编码不能为空', trigger: 'blur' }]
+})
+
+const open = (type: 'create' | 'update', row?: any) => {
+  visible.value = true
+  formType.value = type
+  title.value = type === 'create' ? '新增' : '修改'
+  resetForm()
+  if (row) {
+    formRef.value?.setValues(row)
+  }
+}
+defineExpose({ open })
+
+const submitForm = async () => {
+  const elForm = formRef.value?.getElFormRef()
+  if (!elForm) return
+  await elForm.validate(async (valid) => {
+    if (!valid) return
+    submitting.value = true
+    try {
+      const data = formRef.value?.formModel
+      if (formType.value === 'create') {
+        await ApiAppXxxAppAdminApiAuto.createXxxAppAdminApi(data)
+        message.success('新增成功')
+      } else {
+        await ApiAppXxxAppAdminApiAuto.updateXxxAppAdminApi(data)
+        message.success('修改成功')
+      }
+      visible.value = false
+      emits('success')
+    } finally {
+      submitting.value = false
+    }
+  })
+}
+
+const resetForm = () => {
+  formRef.value?.setValues({ id: undefined, name: '', code: '', status: 1, remark: '' })
+}
+</script>
+```
+
+### 关键组件与 Hooks 速查表
+
+| 场景 | 必须使用的 `@lingman/yd` 能力 |
+|------|------------------------------|
+| 列表页状态管理 | `useTable({ getListApi })` |
+| 列表表格 | `<Table :columns :data :loading :pagination>` |
+| 内容区域包裹 | `<ContentWrap>` |
+| 弹窗 | `<Dialog>` |
+| 表单（新增/编辑） | `<Form :schema :rules>` |
+| 消息提示 | `useMessage()`（`message.success` / `message.delConfirm` / `message.confirm`） |
+| 日期格式化 | `formatDate` / `dateFormatter` |
+| 字典标签 | `<DictTag>` |
+| 图标 | `<Icon icon="ep:xxx" />` |
+| 搜索防抖 | `watch(queryParams, ...)` + `setTimeout` |
+
+### 前端生成规则
+
+1. **模板优先**：生成前端代码时，必须以上述"列表页标准模板"和"表单弹窗标准模板"为基础骨架，只修改业务相关的字段和逻辑。
+2. **表格列动态生成**：根据 `RespVO` 字段生成 `TableColumn[]`；日期列使用 `formatter: (_row, _col, val) => val ? formatDate(val) : ''`；状态/字典列预留 `#status` 插槽使用 `<DictTag>`；操作列固定为 `{ field: 'action', label: '操作', width: 200, fixed: 'right' }`。
+3. **搜索表单动态生成**：列表页搜索区使用原生 `el-form`，根据 `PageReqVO` 字段生成搜索项，初始值统一为 `undefined`。
+4. **表单弹窗动态生成**：新增/编辑弹窗使用 `<Form>` 组件，根据 `SaveReqVO` 字段生成 `FormSchema[]` 和 `FormRules`。
+5. **API 路径**：优先使用 `@/api/auto/app/xxx` 的自动生成 API 对象；仅当用户明确要求手写 API 时才使用 `@/api/xxx` 自定义路径。

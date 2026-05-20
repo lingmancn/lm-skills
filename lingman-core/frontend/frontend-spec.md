@@ -1,5 +1,5 @@
-# 芋道前端开发规范
 
+# 芋道前端开发规范
 > 基于 `yudao-ui-admin-vue3` 项目（Vue 3 + Vite + Element Plus + TypeScript + UnoCSS + Pinia）总结的前端开发规范。  
 > 所有新功能、新页面必须严格遵守本规范。
 
@@ -373,38 +373,24 @@ onMounted(() => {
 
 ### 6.1 完整模板
 
+> **强制规则**：新增/编辑表单**必须使用 `<Form>` 组件**（基于 Schema 的动态表单），禁止直接使用 `<el-form>`。列表页搜索表单仍使用原生 `el-form`。
+
 ```vue
 <template>
-  <el-dialog
-    v-model="visible"
-    :title="title"
-    width="800px"
-    destroy-on-close
-    draggable
-    @close="handleClose"
-  >
-    <el-form ref="formRef" :model="formData" :rules="rules" label-width="90px">
-      <el-form-item label="名称" prop="name" required>
-        <el-input v-model="formData.name" placeholder="请输入名称" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="formData.status" style="width: 100%">
-          <el-option label="启用" :value="0" />
-          <el-option label="禁用" :value="1" />
-        </el-select>
-      </el-form-item>
-    </el-form>
+  <Dialog v-model="visible" :title="title" width="800px">
+    <Form ref="formRef" :schema="schema" :rules="rules" label-width="90px" />
     <template #footer>
       <el-button @click="visible = false">取 消</el-button>
       <el-button type="primary" :loading="submitting" @click="submitForm">确 定</el-button>
     </template>
-  </el-dialog>
+  </Dialog>
 </template>
 
 <script lang="ts" setup>
 import { reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
+import type { FormRules } from 'element-plus'
+import type { FormSchema } from '@/types/form'
+import type { FormExpose } from '@/components/Form'
 import { ApiAppXxxAppAdminApiAuto } from '@/api/app/xxx'
 
 defineOptions({ name: 'XxxForm' })
@@ -415,13 +401,12 @@ const visible = ref(false)
 const title = ref('')
 const formType = ref<'create' | 'update'>('create')
 const submitting = ref(false)
-const formRef = ref<FormInstance>()
+const formRef = ref<FormExpose>()
 
-const formData = reactive({
-  id: undefined as number | undefined,
-  name: '',
-  status: 0
-})
+const schema = reactive<FormSchema[]>([
+  { field: 'name', label: '名称', component: 'Input' },
+  { field: 'status', label: '状态', component: 'Select', componentProps: { options: [{ label: '启用', value: 0 }, { label: '禁用', value: 1 }] } }
+])
 
 const rules = reactive<FormRules>({
   name: [{ required: true, message: '名称不能为空', trigger: 'blur' }]
@@ -434,41 +419,38 @@ const open = (type: 'create' | 'update', row?: any) => {
   title.value = type === 'create' ? '新增' : '修改'
   resetForm()
   if (row) {
-    Object.assign(formData, row)
+    formRef.value?.setValues(row)
   }
 }
 defineExpose({ open })
 
 /** 提交 */
 const submitForm = async () => {
-  await formRef.value?.validate()
-  submitting.value = true
-  try {
-    if (formType.value === 'create') {
-      await ApiAppXxxAppAdminApiAuto.createXxxAppAdminApi(formData)
-      ElMessage.success('新增成功')
-    } else {
-      await ApiAppXxxAppAdminApiAuto.updateXxxAppAdminApi(formData)
-      ElMessage.success('修改成功')
+  const elForm = formRef.value?.getElFormRef()
+  if (!elForm) return
+  await elForm.validate(async (valid) => {
+    if (!valid) return
+    submitting.value = true
+    try {
+      const data = formRef.value?.formModel
+      if (formType.value === 'create') {
+        await ApiAppXxxAppAdminApiAuto.createXxxAppAdminApi(data)
+        ElMessage.success('新增成功')
+      } else {
+        await ApiAppXxxAppAdminApiAuto.updateXxxAppAdminApi(data)
+        ElMessage.success('修改成功')
+      }
+      visible.value = false
+      emits('success')
+    } finally {
+      submitting.value = false
     }
-    visible.value = false
-    emits('success')
-  } finally {
-    submitting.value = false
-  }
+  })
 }
 
 /** 重置 */
 const resetForm = () => {
-  formData.id = undefined
-  formData.name = ''
-  formData.status = 0
-  formRef.value?.resetFields()
-}
-
-/** 关闭回调 */
-const handleClose = () => {
-  resetForm()
+  formRef.value?.setValues({ id: undefined, name: '', status: 0 })
 }
 </script>
 ```
@@ -477,10 +459,11 @@ const handleClose = () => {
 
 - 表单弹窗通过 `defineExpose({ open })` 暴露 `open` 方法，由父组件通过 `ref` 调用。
 - 操作成功后通过 `emits('success')` 通知父组件刷新列表（父组件监听后调用 `methods.getList()`）。
-- 提交前必须调用 `formRef.value?.validate()` 校验。
-- 弹窗关闭时通过 `@close="handleClose"` 重置数据，避免脏数据。
+- 提交前必须调用 `formRef.value?.getElFormRef()?.validate()` 校验。
 - `submitting` 在整个提交过程中保持 `true`，在 `finally` 中重置。
-- 编辑时通过 `Object.assign(formData, row)` 回填数据，避免直接引用。
+- 编辑时通过 `formRef.value?.setValues(row)` 回填数据，避免直接引用。
+- 弹窗统一使用封装的 `<Dialog>` 组件，禁止直接使用 `<el-dialog>`。
+- 表单统一使用封装的 `<Form>` 组件（基于 `FormSchema`），禁止直接使用 `<el-form>`。
 
 ---
 
