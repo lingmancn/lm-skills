@@ -270,8 +270,8 @@ import type { TriggerDetectionTaskAppAdminApiApiParams } from '@/api/types/app/d
       </template>
       <!-- 操作列 -->
       <template #action="{ row }">
-        <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" @click="handleDelete(row.id)">删除</el-button>
+        <el-button type="primary" @click="handleEdit(row)">编辑</el-button>
+        <el-button type="danger" @click="handleDelete(row.id)">删除</el-button>
       </template>
     </Table>
   </ContentWrap>
@@ -752,8 +752,8 @@ background-color: #ffffff;
   </template>
   <!-- 操作列 -->
   <template #action="{ row }">
-    <el-button type="primary" link @click="openForm('update', row.id)">修改</el-button>
-    <el-button type="danger" link @click="handleDelete(row.id)">删除</el-button>
+    <el-button type="primary" @click="openForm('update', row.id)">修改</el-button>
+    <el-button type="danger" @click="handleDelete(row.id)">删除</el-button>
   </template>
 </Table>
 ```
