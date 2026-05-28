@@ -32,6 +32,7 @@
 
 | API | 路径 | 用途 |
 |-----|------|------|
+| MemberUserApi | [member/会员用户API - MemberUserApi.md](../../lingman-core/api-docs/member/会员用户API - MemberUserApi.md) | 会员用户查询、校验用户有效性 |
 | SocialClientApi | [social/社交应用API - SocialClientApi.md](../../lingman-core/api-docs/social/社交应用API - SocialClientApi.md) | 社交应用管理 |
 | SocialUserApi | [social/社交用户API - SocialUserApi.md](../../lingman-core/api-docs/social/社交用户API - SocialUserApi.md) | 社交用户管理 |
 
