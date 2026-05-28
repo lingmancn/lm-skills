@@ -310,7 +310,7 @@ public class {Name}Controller {
 - RESTful HTTP 方法：POST 创建、PUT 更新、DELETE 删除、GET 查询/分页
 - 注入方式：`@Resource`
 - 使用 `CommonResult.success(...)` 静态导入
-- 分页接口用 `@GetMapping` + `@Valid PageReqVO`（不是 `@RequestBody`）
+- 分页接口用 `@GetMapping` + `@Valid PageReqVO`（不是 `@RequestBody`），如果存在列表或者参数过多的情况下需要调整为`Post`请求
 
 ## 错误码定义
 
