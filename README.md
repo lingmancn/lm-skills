@@ -135,7 +135,7 @@ lingman-skills/
 ## 与 CLI 工具配合
 
 项目中有一套 CLI 工具（`@lingman/cli`），通过 `lm` 命令提供：
-- **从数据库生成 DO + Mapper**：`lm mapper` / `lm mapper -n`（强制更新）
+- **从数据库生成 DO + Mapper**（可选，**不推荐日常使用**，以开发者自行维护 DO/Mapper 为准）：`lm mapper` / `lm mapper -n`（强制更新）
 - **从 Swagger 生成前端 API**：`lm api`
 - **CLI 自身更新**：`lm u`
 
@@ -185,17 +185,17 @@ npm install @lingman/cli -g
 | `lm api` | 前端工程根目录 |
 | `lm u` | 任意目录 |
 
-> `lm mapper` / `lm mapper -n` 为只读同步命令，Skills 可直接帮助用户运行，无需额外许可。
+> `lm mapper` / `lm mapper -n` 为只读同步命令；**不推荐日常使用**，DO/Mapper 以开发者自行创建维护为准，仅在全新库批量初始化时可考虑，且生成后须人工核对。
 
 ### 与 Skills 的分工
 
 | 层 | 生成方式 | 负责方 |
 |----|----------|--------|
-| DO (`models/entity/`) | CLI 工具从数据库表结构生成 | CLI 工具 |
-| Mapper (`models/mapper/`) | CLI 工具从数据库表结构生成 | CLI 工具 |
+| DO (`models/entity/`) | 开发者自行创建维护（`lm mapper` 仅可选辅助，不推荐） | 开发者 |
+| Mapper (`models/mapper/`) | 开发者自行创建维护（`lm mapper` 仅可选辅助，不推荐） | 开发者 |
 | VO/Convert/Service/Controller | AI 根据业务需求生成 | crud-generator Skill |
 
-典型工作流：**CLI 生成 DO/Mapper → crud-generator 生成 Service/VO/Controller**
+典型工作流：**开发者自行创建 DO/Mapper → crud-generator 生成 Service/VO/Controller**
 
 ## 扩展计划
 

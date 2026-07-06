@@ -153,7 +153,7 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 
 ## 配合 CLI 工具
 
-设计接口前，建议先用 CLI 工具从数据库生成 DO/Mapper，了解已有的数据表结构，确保接口定义与数据模型一致。
+设计接口前，建议先了解已有的 DO/Mapper（由开发者自行创建维护），确保接口定义与数据模型一致。
 
 ### CLI 安装与使用
 
@@ -181,9 +181,9 @@ npm install @lingman/cli -g
 
 - `fileOverride`：控制是否覆盖已存在的文件。`true` — 覆盖更新；`false` — 不覆盖（默认）
 
-在**后端工程根目录**下运行 `lm mapper` 可自动同步 DO/Mapper；在**前端工程根目录**下运行 `lm api` 可根据 Swagger 生成前端接口定义。
+DO/Mapper 由开发者自行创建维护（`lm mapper` 可选但**不推荐日常使用**，详见 crud-generator）；在**前端工程根目录**下运行 `lm api` 可根据 Swagger 生成前端接口定义。
 
-> **重要**：两个命令都必须在对应工程根目录中运行，不能在其他子目录中执行。
+> **重要**：`lm api` 必须在前端工程根目录中运行，不能在其他子目录中执行。
 
 ## 参考文档
 

@@ -1,6 +1,6 @@
 ---
 name: crud-generator
-description: Lingman-Starter 框架 CRUD 代码生成助手。当用户需要：(1) 生成业务模块的 CRUD 代码（Controller/Service/VO/Mapper）(2) 基于已有数据库表/DO 生成增删改查代码骨架 (3) 新建业务模块 (4) 生成完整的业务代码模板 时触发此技能。不要在以下场景触发：从数据库生成 DO/Mapper（由 CLI 工具处理）、纯文档查询（由 doc-qa 处理）、SQL 语句生成（由 sql-generator 处理）。
+description: Lingman-Starter 框架 CRUD 代码生成助手。当用户需要：(1) 生成业务模块的 CRUD 代码（Controller/Service/VO/Mapper）(2) 基于已有数据库表/DO 生成增删改查代码骨架 (3) 新建业务模块 (4) 生成完整的业务代码模板 时触发此技能。不要在以下场景触发：生成 DO/Mapper（由开发者自行创建维护）、纯文档查询（由 doc-qa 处理）、SQL 语句生成（由 sql-generator 处理）。
 ---
 
 # CRUD 代码生成指南
@@ -16,8 +16,8 @@ description: Lingman-Starter 框架 CRUD 代码生成助手。当用户需要：
 | Service 实现 | `{Name}ServiceImpl.java` | 是 |
 | VO | `{Name}SaveReqVO.java` 等 | 是 |
 | Convert | `{Name}Convert.java`（MapStruct） | 是 |
-| DO | 不生成（由 CLI 工具从数据库生成） | 否 |
-| Mapper | 不生成（由 CLI 工具从数据库生成） | 否 |
+| DO | 不生成（由开发者自行创建维护） | 否 |
+| Mapper | 不生成（由开发者自行创建维护） | 否 |
 
 ## 文件路径模板
 
@@ -58,66 +58,30 @@ $MODULE_ROOT/src/main/java/com/lm/app/
   - 生成业务代码前，**先确认 `AdminDeleteReqVO` 是否已存在**；若项目尚无该类，必须先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增该类，再继续生成业务代码。
 - GET 查询/分页仍按框架规范使用 `@RequestParam` 或 `@Valid PageReqVO`，不受上述非 GET 规则约束。
 
-## 前置条件：CLI 工具生成 DO/Mapper
+## 前置条件：DO/Mapper 由开发者自行维护
 
-本 Skill 不负责生成 DO 和 Mapper，这两层由 CLI 工具（`@lingman/cli`）从数据库自动同步。
+本 Skill **不生成 DO 和 Mapper**，这两层由**开发者自行创建和维护**。生成上层代码（VO/Convert/Service/Controller）前，须确保目标 DO/Mapper 已就绪——本 Skill 会读取 DO 字段作为生成依据。
 
-### CLI 安装（用户手动安装）
+### DO/Mapper 编写要点
 
-**注意**：不会自动为用户安装 CLI 工具。如果用户尚未安装，提示他们按以下步骤操作：
+参照 [framework.md](../lingman-core/framework.md) 的 DO/Mapper 规范：
 
-```bash
-# 1. 配置 npm registry
-npm config set registry https://registry.npmmirror.com/
-npm config set @lingman:registry=https://git.lingman.tech:8081/repository/npm_hosted/
+- **DO**：继承 `BaseDO`（多租户场景用 `TenantBaseDO`），加 `@TableName("t_xxx")`、`@KeySequence`、`@TableId`、`@TableField`，配合 Lombok `@Data` / `@Builder` / `@NoArgsConstructor` / `@AllArgsConstructor` / `@EqualsAndHashCode(callSuper = true)`。
+- **Mapper**：继承 `BaseMapperX<{Name}DO>`，加 `@Mapper` 注解。
 
-# 2. 安装（如已安装旧版可先执行 npm uninstall -g lingman-cli）
-npm install @lingman/cli -g
-```
+### 关于 `lm mapper`（可选，不推荐）
 
-**环境要求**：Node.js 22+
+`@lingman/cli` 提供的 `lm mapper` 可从数据库自动同步 DO/Mapper，但**该命令不重要，开发中尽量不使用**——以开发者自行创建和维护为准。原因：自动生成可能覆盖手写内容、字段命名与注释不一定符合团队规范、还会引入额外的 CLI 配置成本。
 
-### 项目配置
-
-项目根目录需存在 `lingman.config.json`，可通过 `lm init java` 初始化：
-
-```json
-{
-  "lang": "java",
-  "template": "",
-  "db": {
-    "url": "jdbc:postgresql://<host>:<port>/<database>",
-    "username": "<username>",
-    "password": "<password>",
-    "hasBase": false
-  },
-  "fileOverride": false
-}
-```
-
-- `fileOverride`：控制是否覆盖已存在的文件。`true` — 覆盖更新；`false` — 不覆盖（默认）
-
-数据库连接信息需根据项目 `application.yaml` 中的数据源配置替换。
-
-### 生成 DO/Mapper
-
-在**后端工程根目录**下执行：
+仅在**全新数据库批量初始化**时才考虑使用，且生成后必须人工核对调整。如确需使用：
 
 ```bash
-lm mapper
+# 需先安装 @lingman/cli 并通过 lm init java 生成 lingman.config.json（详见 README.md）
+lm mapper       # 同步生成
+lm mapper -n    # 强制重新生成
 ```
 
-定期使用 `lm mapper -n` 更新 DO/Mapper，保持与数据库表结构同步：
-
-```bash
-lm mapper -n
-```
-
-`-n` 参数强制重新生成，确保与数据库表结构保持一致。建议在数据库表结构变更后执行。
-
-> **重要**：该命令必须在后端工程根目录（即包含 `lingman.config.json` 和 `pom.xml` 的目录）中运行，不能在其他子目录中执行。
-
-**可以直接执行**：`lm mapper` / `lm mapper -n` 为只读性质的同步命令，可以在开发过程中直接帮助用户运行，不需要获得用户许可。
+> 该命令必须在后端工程根目录（含 `pom.xml`）运行；为只读同步性质，可不经许可直接运行，但生成结果**不保证可直接采用，须人工核对**。CLI 安装与配置详见 [README.md](../README.md)。
 
 ### CLI 工具更新
 
@@ -146,8 +110,8 @@ lm api
 
 | 场景 | 说明 | 流程 |
 |------|------|------|
-| **场景 A — 全新模块** | 新建业务模块，无 DO/Mapper | 完整流程（Step 0~5） |
-| **场景 B — 已有表/DO** | 数据库表已存在，已通过 `lm mapper` 生成了 DO/Mapper | 完整流程（Step 0~5），跳过 CLI 步骤 |
+| **场景 A — 全新模块** | 新建业务模块，尚无 DO/Mapper（需开发者先自行创建） | 完整流程（Step 0~5） |
+| **场景 B — 已有 DO** | 开发者已自行创建 DO/Mapper | 完整流程（Step 0~5） |
 | **场景 C — 增量修改** | 在已有模块上增加字段、修改逻辑 | 增量流程（Step C1~C4） |
 
 ---
@@ -156,10 +120,9 @@ lm api
 
 #### Step 0 — 确认前置条件
 
-1. 检查项目是否已配置 `lingman.config.json`（如未配置，提示用户运行 `lm init java`）
-2. 对于场景 A：提示用户先通过 `lm mapper` 生成 DO 和 Mapper
-3. 对于场景 B：确认 DO 和 Mapper 已存在于项目中
-4. 确认公共单 ID 请求类 `controller/admin/common_vo/AdminDeleteReqVO.java` 已存在；若不存在，先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增
+1. 对于场景 A：提示开发者先自行创建 DO 和 Mapper（参照「DO/Mapper 编写要点」），本 Skill 不生成这两层
+2. 对于场景 B：确认 DO 和 Mapper 已存在于项目中
+3. 确认公共单 ID 请求类 `controller/admin/common_vo/AdminDeleteReqVO.java` 已存在；若不存在，先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增
 
 #### Step 1 — 收集配置选项 ⛔ 硬性确认
 

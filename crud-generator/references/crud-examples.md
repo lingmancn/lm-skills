@@ -4,7 +4,7 @@
 
 以下是一个完整的检测任务模块 CRUD 代码示例
 
-### DO（由 CLI 工具从数据库生成）
+### DO（由开发者自行创建维护）
 
 ```java
 package com.lm.app.models.entity;
@@ -56,7 +56,7 @@ private String remark;
 }
 ```
 
-### Mapper（由 CLI 工具从数据库生成）
+### Mapper（由开发者自行创建维护）
 
 ```java
 package com.lm.app.models.mapper;
