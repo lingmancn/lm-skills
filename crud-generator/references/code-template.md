@@ -40,8 +40,8 @@ public class {Name}Controller {
 
     @DeleteMapping("/delete")
     @Operation(summary = "删除{BizName}")
-    public CommonResult<Boolean> delete(@RequestParam("id") Long id) {
-        {name}Service.delete(id);
+    public CommonResult<Boolean> delete(@Valid @RequestBody {DeleteReqVO} deleteReqVO) {
+        {name}Service.delete(deleteReqVO.getId());
         return success(true);
     }
 
@@ -218,6 +218,27 @@ public class {Name}SaveReqVO {
     private String name;
 
     // 其他字段...
+}
+```
+
+### DeleteReqVO（兜底模板）
+
+> 单 ID 删除优先复用项目已有的公共删除/ID 请求 VO（如 `IdReqVO`、`DeleteReqVO`、`BaseIdReqVO` 等）。只有项目没有可复用公共 VO 时，才生成该业务专属 `{Name}DeleteReqVO`。
+
+```java
+package com.lm.app.controller.admin.{biz}.vo;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
+@Schema(description = "管理后台 - {BizName}删除 Request VO")
+public class {Name}DeleteReqVO {
+
+    @Schema(description = "编号", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "编号不能为空")
+    private Long id;
 }
 ```
 

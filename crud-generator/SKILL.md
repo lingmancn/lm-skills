@@ -28,7 +28,8 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 │   └── vo/
 │       ├── {Name}SaveReqVO.java
 │       ├── {Name}RespVO.java
-│       └── {Name}PageReqVO.java
+│       ├── {Name}PageReqVO.java
+│       └── {Name}DeleteReqVO.java  # 仅当项目没有公共删除/ID 请求 VO 时生成
 └── service/admin/
     ├── {Name}Service.java
     └── impl/
@@ -40,6 +41,14 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 ## 代码规范
 
 参见 [framework.md](../lingman-core/framework.md)。
+
+### 后端接口强制规则
+
+- DELETE 请求禁止使用 `@RequestParam`、`@PathVariable` 或 URL 查询参数/路径参数传参。
+- DELETE 请求参数必须使用 `@RequestBody` 承载，通过 `deleteReqVO.getId()` 获取编号。
+- 单 ID 删除优先复用项目已有的公共删除/ID 请求 VO（如 `IdReqVO`、`DeleteReqVO`、`BaseIdReqVO` 等）；如果项目不存在可复用的公共 VO，才生成业务专属 `{Name}DeleteReqVO`。
+- DELETE Controller 方法必须使用 `@Valid @RequestBody {DeleteReqVO} deleteReqVO`，其中 `{DeleteReqVO}` 代表已存在的公共 VO 或兜底生成的 `{Name}DeleteReqVO`。
+- GET 查询/分页仍按框架规范使用 `@RequestParam` 或 `@Valid PageReqVO`，不要套用 DELETE 规则。
 
 ## 前置条件：CLI 工具生成 DO/Mapper
 
@@ -179,7 +188,7 @@ lm api
 
 按以下顺序生成文件，同批次内的文件可并行写入：
 
-1. VO 类（SaveReqVO → RespVO → PageReqVO）
+1. VO 类（SaveReqVO → RespVO → PageReqVO；若项目没有公共删除/ID 请求 VO，则额外生成 DeleteReqVO）
 2. Convert
 3. Service 接口 + 实现
 4. Controller
@@ -363,11 +372,12 @@ const handleEdit = (row: any) => {
   formRef.value?.open('update', row)
 }
 
-// 10. 删除
+// 10. 删除（先弹确认框，删除后刷新列表）
 const handleDelete = async (row: any) => {
   await message.delConfirm('确认删除该记录吗？')
   await ApiAppXxxAppAdminApiAuto.deleteXxxAppAdminApi({ id: row.id })
   message.success('删除成功')
+  // 重新拉取列表，确保数据最新
   methods.getList()
 }
 
@@ -432,6 +442,7 @@ const open = (type: 'create' | 'update', row?: any) => {
 }
 defineExpose({ open })
 
+// 提交表单：手动校验 → 根据 formType 调用新增或修改接口
 const submitForm = async () => {
   const elForm = formRef.value?.getElFormRef()
   if (!elForm) return
@@ -440,6 +451,7 @@ const submitForm = async () => {
     submitting.value = true
     try {
       const data = formRef.value?.formModel
+      // 根据表单类型调用不同接口：create → 新增, update → 修改
       if (formType.value === 'create') {
         await ApiAppXxxAppAdminApiAuto.createXxxAppAdminApi(data)
         message.success('新增成功')
@@ -483,6 +495,7 @@ const resetForm = () => {
 3. **搜索表单动态生成**：列表页搜索区**优先使用 `<Search>` 组件**（基于 `FormSchema`），根据 `PageReqVO` 字段生成 `searchSchema`，初始值统一为 `undefined`；仅当搜索项极少（1 个）或自定义样式 `<Search>` 无法实现时，才回退到原生 `el-form`。
 4. **表单弹窗动态生成**：新增/编辑弹窗使用 `<Form>` 组件，根据 `SaveReqVO` 字段生成 `FormSchema[]` 和 `FormRules`。
 5. **API 路径**：优先使用 `@/api/auto/app/xxx` 的自动生成 API 对象；仅当用户明确要求手写 API 时才使用 `@/api/xxx` 自定义路径。
+6. **代码注释**：生成的前端代码中，复杂逻辑方法必须添加注释说明其用途和关键步骤；不易理解的模板片段（如条件渲染、嵌套插槽、特殊数据处理）必须添加行内注释。注释使用中文，简洁明了，说明"为什么这么做"而非"做了什么"。
 
 ---
 

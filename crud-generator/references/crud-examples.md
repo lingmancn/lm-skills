@@ -138,6 +138,25 @@ public class DetectionTaskSaveReqVO {
 }
 ```
 
+#### DetectionTaskDeleteReqVO.java
+
+```java
+package com.lm.app.controller.admin.detectiontask.vo;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
+@Schema(description = "管理后台 - 检测任务删除 Request VO")
+public class DetectionTaskDeleteReqVO {
+
+    @Schema(description = "编号", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "编号不能为空")
+    private Long id;
+}
+```
+
 #### DetectionTaskRespVO.java
 
 ```java
@@ -315,6 +334,7 @@ public class DetectionTaskServiceImpl implements DetectionTaskService {
 ```java
 package com.lm.app.controller.admin.detectiontask;
 
+import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskDeleteReqVO;
 import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskPageReqVO;
 import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskRespVO;
 import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskSaveReqVO;
@@ -352,8 +372,8 @@ public class DetectionTaskController {
 
     @DeleteMapping("/delete")
     @Operation(summary = "删除检测任务")
-    public CommonResult<Boolean> delete(@RequestParam("id") Long id) {
-        detectionTaskService.delete(id);
+    public CommonResult<Boolean> delete(@Valid @RequestBody DetectionTaskDeleteReqVO deleteReqVO) {
+        detectionTaskService.delete(deleteReqVO.getId());
         return success(true);
     }
 
