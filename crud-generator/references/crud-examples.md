@@ -26,26 +26,33 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class TaskDO extends BaseDO {
 
-    @TableId(value = "id")
-    private Long id;
+    /** 主键ID */
+@TableId(value = "id")
+private Long id;
 
-    @TableField("task_name")
-    private String taskName;
+/** 任务名称 */
+@TableField("task_name")
+private String taskName;
 
-    @TableField("model_id")
-    private Long modelId;
+/** 关联模型ID */
+@TableField("model_id")
+private Long modelId;
 
-    @TableField("alarm_template")
-    private String alarmTemplate;
+/** 告警模板（告警消息内容模板） */
+@TableField("alarm_template")
+private String alarmTemplate;
 
-    @TableField("alarm_level")
-    private String alarmLevel;
+/** 告警级别（如：1-提示，2-警告，3-严重） */
+@TableField("alarm_level")
+private String alarmLevel;
 
-    @TableField("status")
-    private Short status;
+/** 状态（0-禁用，1-启用） */
+@TableField("status")
+private Short status;
 
-    @TableField("remark")
-    private String remark;
+/** 备注说明 */
+@TableField("remark")
+private String remark;
 }
 ```
 
@@ -108,6 +115,7 @@ package com.lm.app.controller.admin.detectiontask.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -121,16 +129,20 @@ public class DetectionTaskSaveReqVO {
     @NotBlank(message = "任务名称不能为空")
     private String taskName;
 
-    @Schema(description = "模型编号", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "模型ID", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "模型ID不能为空")
     private Long modelId;
 
-    @Schema(description = "告警模板")
+    @Schema(description = "告警模板", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "告警模板不能为空")
     private String alarmTemplate;
 
-    @Schema(description = "告警级别")
+    @Schema(description = "告警级别", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "告警级别不能为空")
     private String alarmLevel;
 
-    @Schema(description = "状态")
+    @Schema(description = "状态（0-禁用，1-启用）", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "状态不能为空")
     private Short status;
 
     @Schema(description = "备注")
@@ -236,15 +248,43 @@ import com.lm.starter.framework.common.pojo.PageResult;
 
 public interface DetectionTaskService {
 
-    Long create(DetectionTaskSaveReqVO createReqVO);
+   /**
+ * 创建检测任务
+ *
+ * @param createReqVO 创建请求参数
+ * @return 新创建的检测任务ID
+ */
+Long create(DetectionTaskSaveReqVO createReqVO);
 
-    void update(DetectionTaskSaveReqVO updateReqVO);
+/**
+ * 更新检测任务
+ *
+ * @param updateReqVO 更新请求参数（需包含任务ID）
+ */
+void update(DetectionTaskSaveReqVO updateReqVO);
 
-    void delete(Long id);
+/**
+ * 删除检测任务
+ *
+ * @param id 检测任务ID
+ */
+void delete(Long id);
 
-    DetectionTaskRespVO get(Long id);
+/**
+ * 获取检测任务详情
+ *
+ * @param id 检测任务ID
+ * @return 检测任务响应对象，不存在时返回 null
+ */
+DetectionTaskRespVO get(Long id);
 
-    PageResult<DetectionTaskRespVO> page(DetectionTaskPageReqVO pageReqVO);
+/**
+ * 分页查询检测任务列表
+ *
+ * @param pageReqVO 分页查询请求参数
+ * @return 检测任务分页结果
+ */
+PageResult<DetectionTaskRespVO> page(DetectionTaskPageReqVO pageReqVO);
 }
 ```
 
@@ -308,7 +348,10 @@ public class DetectionTaskServiceImpl implements DetectionTaskService {
         }
         return detectionTaskConvert.convert(task);
     }
-
+    /**
+ * 分页查询检测任务
+ * <p>支持按任务名称模糊搜索、按状态精确过滤，默认按ID倒序排列</p>
+ */
     @Override
     public PageResult<DetectionTaskRespVO> page(DetectionTaskPageReqVO pageReqVO) {
         LambdaQueryWrapperX<TaskDO> queryWrapper = new LambdaQueryWrapperX<>();
@@ -318,7 +361,9 @@ public class DetectionTaskServiceImpl implements DetectionTaskService {
         return detectionTaskMapper.selectPage(pageReqVO, queryWrapper)
             .convert(detectionTaskConvert::convert);
     }
-
+    /**
+ * 校验检测任务是否存在，不存在则抛出 DETECTION_TASK_NOT_EXISTS 异常
+ */
     private void validateDetectionTaskExists(Long id) {
         if (id == null || detectionTaskMapper.selectById(id) == null) {
             throw exception(ErrorCodeConstants.DETECTION_TASK_NOT_EXISTS);
