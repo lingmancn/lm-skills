@@ -103,9 +103,6 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-
 import static com.lm.starter.framework.common.exception.util.ServiceExceptionUtil.exception;
 
 @Service
@@ -316,6 +313,25 @@ public class {Name}PageReqVO extends PageParam {
     // 其他查询条件...
 }
 ```
+
+## ErrorCodeConstants 模板（追加常量，不新建文件）
+
+> ServiceImpl 引用了 `ErrorCodeConstants.{NAME}_NOT_EXISTS`，因此该常量必须随业务代码一并生成。向项目已有的 `enums/ErrorCodeConstants.java` 追加，**不要新建文件**；错误码值须选用未被占用的段。
+
+```java
+package com.lm.app.enums;
+
+import com.lm.starter.framework.common.exception.ErrorCode;
+
+public interface ErrorCodeConstants {
+
+    // ... 已有常量保持不动 ...
+
+    ErrorCode {NAME}_NOT_EXISTS = new ErrorCode(1_100_000_001, "{BizName}不存在");
+}
+```
+
+> 错误码值 `1_100_000_001` 仅为示例。生成前必须确认该值未被占用；不同业务模块应使用不同的错误码段，避免冲突。
 
 ## 变量替换说明
 

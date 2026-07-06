@@ -16,6 +16,7 @@ description: Lingman-Starter 框架 CRUD 代码生成助手。当用户需要：
 | Service 实现 | `{Name}ServiceImpl.java` | 是 |
 | VO | `{Name}SaveReqVO.java` 等 | 是 |
 | Convert | `{Name}Convert.java`（MapStruct） | 是 |
+| 错误码常量 | `ErrorCodeConstants.java` 追加 `{NAME}_NOT_EXISTS` | 是（追加，不新建文件） |
 | DO | 不生成（由开发者自行创建维护） | 否 |
 | Mapper | 不生成（由开发者自行创建维护） | 否 |
 
@@ -29,15 +30,18 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 │       ├── {Name}SaveReqVO.java
 │       ├── {Name}RespVO.java
 │       └── {Name}PageReqVO.java
-└── service/admin/
-    ├── {Name}Service.java
-    └── impl/
-        └── {Name}ServiceImpl.java
+├── service/{biz}/
+│   ├── {Name}Service.java
+│   └── {Name}ServiceImpl.java
+└── convert/{biz}/
+    └── {Name}Convert.java
 ```
 
 `$MODULE_ROOT` 为项目根目录。
 
 > 单 ID 删除/操作请求**统一使用** `controller/admin/common_vo/AdminDeleteReqVO.java`（全项目共享的公共类，不为各业务单独生成；若项目尚无该类需先新增，详见「后端接口强制规则」）。
+>
+> ServiceImpl 中引用的错误码常量 `{NAME}_NOT_EXISTS` 须**追加到项目已有的** `enums/ErrorCodeConstants.java`（不新建文件），并选用未被占用的错误码值；详见 [code-template.md](references/code-template.md)「ErrorCodeConstants 模板」。
 
 ## 代码规范
 
@@ -95,6 +99,8 @@ lm u
 
 只要后端接口发生变动（请求参数、响应参数的增删改），必须按以下流程联动同步，不得跳过：
 
+> 区分：本节的 `lm api` 是 CLI 命令，从后端 Swagger 反向生成前端接口调用代码（工程同步动作）；`api-generator` skill 用于设计阶段产出接口设计文档，二者用途不同。
+
 1. **重启后端服务**：确保 Swagger 文档（`/v3/api-docs`）反映最新接口。可由开发者手动重启，或由 AI 自动重启——**AI 自动重启前必须征得用户确认**。
 2. **同步前端接口**：在前端工程根目录下执行 `lm api`，从后端 Swagger 地址自动生成前端接口定义（接口方法、入参/响应类型封装）。`lm api` 为只读同步命令，可直接执行无需额外许可。
 3. **引用 API**：前端代码引用接口时，必须使用 `lm api` 同步生成的方法，统一从 `src/api/auto/` 导入；该目录由命令全量覆盖，**禁止手动修改**。
@@ -110,19 +116,18 @@ lm api
 
 | 场景 | 说明 | 流程 |
 |------|------|------|
-| **场景 A — 全新模块** | 新建业务模块，尚无 DO/Mapper（需开发者先自行创建） | 完整流程（Step 0~5） |
-| **场景 B — 已有 DO** | 开发者已自行创建 DO/Mapper | 完整流程（Step 0~5） |
+| **场景 A — 新建模块** | 新建业务模块；DO/Mapper 可能已由开发者自行创建，也可能尚不存在（需先提示开发者创建） | 完整流程（Step 0~5） |
 | **场景 C — 增量修改** | 在已有模块上增加字段、修改逻辑 | 增量流程（Step C1~C4） |
 
 ---
 
-### 场景 A/B：全新模块生成
+### 场景 A：新建模块生成
 
 #### Step 0 — 确认前置条件
 
-1. 对于场景 A：提示开发者先自行创建 DO 和 Mapper（参照「DO/Mapper 编写要点」），本 Skill 不生成这两层
-2. 对于场景 B：确认 DO 和 Mapper 已存在于项目中
-3. 确认公共单 ID 请求类 `controller/admin/common_vo/AdminDeleteReqVO.java` 已存在；若不存在，先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增
+1. 确认 DO 和 Mapper 已就绪：若项目中已存在（开发者已自行创建），直接进入下一步；若尚不存在，提示开发者先参照「DO/Mapper 编写要点」自行创建——本 Skill 不生成这两层
+2. 确认公共单 ID 请求类 `controller/admin/common_vo/AdminDeleteReqVO.java` 已存在；若不存在，先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增
+3. 确认 `enums/ErrorCodeConstants.java` 已存在（通常项目已有该文件）；查清已用错误码值，避免与本次新增的 `{NAME}_NOT_EXISTS` 冲突
 
 #### Step 1 — 收集配置选项 ⛔ 硬性确认
 
@@ -156,8 +161,9 @@ lm api
 
 1. VO 类（SaveReqVO → RespVO → PageReqVO）
 2. Convert
-3. Service 接口 + 实现
-4. Controller
+3. 向 `enums/ErrorCodeConstants.java` 追加 `{NAME}_NOT_EXISTS` 常量（用 Edit 精确插入，错误码值须未被占用）
+4. Service 接口 + 实现
+5. Controller
 
 #### Step 5 — 输出清单
 
@@ -165,10 +171,9 @@ lm api
 
 ```
 后续操作建议：
-1. 在 ErrorCodeConstants.java 中添加错误码
-2. 如需权限控制，使用 permission-generator 生成权限配置
-3. 如需生成建表 SQL，使用 sql-generator
-4. 接口已变动，执行「接口变动与前端 API 同步」流程（重启后端 → 前端 `lm api`）
+1. 如需权限控制，使用 permission-generator 生成权限配置
+2. 如需生成建表 SQL，使用 sql-generator
+3. 接口已变动，执行「接口变动与前端 API 同步」流程（重启后端 → 前端 `lm api`）
 ```
 
 ---
