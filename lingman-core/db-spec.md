@@ -15,6 +15,7 @@ PRIMARY KEY (`id`)
 ```
 
 **多租户场景**（如 p705 工程）：如果项目启用了多租户，需额外添加：
+
 ```sql
 `tenant_id` bigint NOT NULL DEFAULT '0' COMMENT '租户编号',
 ```
@@ -48,22 +49,60 @@ PRIMARY KEY (`id`)
 ## 建表示例
 
 ```sql
-CREATE TABLE t_task (
-    id                  bigint PRIMARY KEY,
-    task_name           varchar(128) NOT NULL DEFAULT '' COMMENT '任务名称',
-    model_id            bigint NOT NULL DEFAULT 0 COMMENT '模型编号',
-    alarm_template      varchar(500) DEFAULT '' COMMENT '告警模板',
-    alarm_level         varchar(32) DEFAULT '' COMMENT '告警级别',
-    status              smallint NOT NULL DEFAULT 0 COMMENT '状态',
-    remark              varchar(500) DEFAULT '' COMMENT '备注',
-    creator             varchar(64) DEFAULT '' COMMENT '创建者',
-    create_time         timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updater             varchar(64) DEFAULT '' COMMENT '更新者',
-    update_time         timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted             bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除'
-);
+CREATE TABLE "public"."t_course" (
+  "id" int8 NOT NULL,
+  "name" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
+  "college_id" int8,
+  "price" int8,
+  "deposit" int8,
+  "class_hours" int4,
+  "video_url" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+  "outline" text COLLATE "pg_catalog"."default",
+  "detail" text COLLATE "pg_catalog"."default",
+  "status" int2 NOT NULL DEFAULT 1,
+  "creator" varchar(64) COLLATE "pg_catalog"."default" DEFAULT ''::character varying,
+  "create_time" timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updater" varchar(64) COLLATE "pg_catalog"."default" DEFAULT ''::character varying,
+  "update_time" timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "deleted" int2 NOT NULL DEFAULT 0,
+  CONSTRAINT "pk_t_course" PRIMARY KEY ("id")
+)
+;
 
-COMMENT ON TABLE t_task IS '检测任务表';
+ALTER TABLE "public"."t_course" 
+  OWNER TO "p705";
+
+COMMENT ON COLUMN "public"."t_course"."id" IS '主键ID';
+
+COMMENT ON COLUMN "public"."t_course"."name" IS '课程名称';
+
+COMMENT ON COLUMN "public"."t_course"."college_id" IS '学院ID';
+
+COMMENT ON COLUMN "public"."t_course"."price" IS '课程价格（单位：分）';
+
+COMMENT ON COLUMN "public"."t_course"."deposit" IS '定金（单位：分）';
+
+COMMENT ON COLUMN "public"."t_course"."class_hours" IS '课时数';
+
+COMMENT ON COLUMN "public"."t_course"."video_url" IS '视频URL';
+
+COMMENT ON COLUMN "public"."t_course"."outline" IS '课程大纲';
+
+COMMENT ON COLUMN "public"."t_course"."detail" IS '课程详情';
+
+COMMENT ON COLUMN "public"."t_course"."status" IS '状态: 0-禁用, 1-启用';
+
+COMMENT ON COLUMN "public"."t_course"."creator" IS '创建者';
+
+COMMENT ON COLUMN "public"."t_course"."create_time" IS '创建时间';
+
+COMMENT ON COLUMN "public"."t_course"."updater" IS '更新者';
+
+COMMENT ON COLUMN "public"."t_course"."update_time" IS '更新时间';
+
+COMMENT ON COLUMN "public"."t_course"."deleted" IS '逻辑删除标识';
+
+COMMENT ON TABLE "public"."t_course" IS '课程主表';
 
 CREATE SEQUENCE task_seq START 10000;
 ```

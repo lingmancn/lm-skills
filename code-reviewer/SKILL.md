@@ -24,6 +24,7 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 > - API 层：是否从 `api/auto/` 导入自动生成的 API 对象（`import { ApiAppXxxAppAdminApiAuto }`），禁止直接手写 URL
 > - **API 自动生成文件保护**：`src/api/auto/` 下的文件是否为命令自动生成，是否存在手动修改的痕迹（如手动增删接口、调整参数类型等）
 > - 列表页：是否使用 `useTable` hook 管理列表状态，而非手动维护 `loading`/`total`/`list`
+> - 列表页搜索表单：字段 ≥ 2 个时是否使用 `<Search>` 组件；仅 1 个搜索字段或需自定义样式时是否合理回退 `el-form`（详见 frontend-spec.md「搜索表单」说明）
 > - 表单校验：`FormRules` 是否与后端 `@Valid` 规则一致（必填、格式、长度）
 > - 错误处理：是否使用 `useMessage()` 或 `ElMessage`/`ElMessageBox`，异常捕获是否完整（`try/finally`）
 > - 字典使用：表格中字典列是否使用 `<DictTag>`，下拉框是否使用 `getDictOptions` / `getIntDictOptions`

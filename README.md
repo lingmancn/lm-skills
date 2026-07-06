@@ -103,7 +103,7 @@ lingman-skills/
 │   │   ├── social/            # 社交应用 API
 │   │   ├── user/              # 管理员用户 API
 │   │   └── websocket/         # WebSocket 推送 API
-│   └── frontend/              # 前端规范（待补充）
+│   └── frontend/              # 前端规范（frontend-spec.md，列表页/表单弹窗/Search/@lingman/yd）
 │
 ├── crud-generator/            # Skill: CRUD 代码生成
 ├── sql-generator/             # Skill: SQL 生成

@@ -1,7 +1,8 @@
 
-# 芋道前端开发规范
-> 基于 `yudao-ui-admin-vue3` 项目（Vue 3 + Vite + Element Plus + TypeScript + UnoCSS + Pinia）总结的前端开发规范。  
-> 所有新功能、新页面必须严格遵守本规范。
+# Lingman 前端开发规范（权威源）
+
+> 基于 yudao-ui-admin-vue3 项目（Vue 3 + Vite + Element Plus + TypeScript + UnoCSS + Pinia）。
+> 所有新功能、新页面必须严格遵守本规范；crud-generator / code-reviewer / dict-generator 等 Skill 均引用本文档，不再各自维护副本。
 
 ---
 
@@ -224,7 +225,7 @@ import type { TriggerDetectionTaskAppAdminApiApiParams } from '@/api/types/app/d
 
 ## 5. 列表页规范（index.vue）
 
-标准列表页使用 `useTable` hook 管理列表状态，模板结构如下：
+标准列表页使用 `useTable` hook 管理列表状态，搜索区使用 `<Search>` 组件，模板结构如下：
 
 ### 5.1 Template 结构
 
@@ -232,31 +233,20 @@ import type { TriggerDetectionTaskAppAdminApiApiParams } from '@/api/types/app/d
 <template>
   <!-- 搜索区域 -->
   <ContentWrap>
-    <el-form ref="searchFormRef" :inline="true" :model="queryParams" class="-mb-15px">
-      <el-form-item label="任务名称" prop="taskName">
-        <el-input v-model="queryParams.taskName" clearable placeholder="请输入任务名称" />
-      </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" clearable placeholder="请选择状态">
-          <el-option label="启用" :value="0" />
-          <el-option label="禁用" :value="1" />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button @click="handleReset">
-          <Icon class="mr-5px" icon="ep:refresh" />重置
-        </el-button>
-        <el-button type="primary" plain @click="handleCreate">
+    <Search :schema="searchSchema" :model="queryParams" @search="handleQuery" @reset="handleReset">
+      <template #actionMore>
+        <el-button type="primary" @click="handleCreate">
           <Icon class="mr-5px" icon="ep:plus" />新增
         </el-button>
-      </el-form-item>
-    </el-form>
+      </template>
+    </Search>
   </ContentWrap>
 
   <!-- 列表区域 -->
   <ContentWrap>
     <Table
       :columns="columns"
+      border
       :data="tableObject.tableList"
       :loading="tableObject.loading"
       :pagination="{ total: tableObject.total }"
@@ -266,12 +256,12 @@ import type { TriggerDetectionTaskAppAdminApiApiParams } from '@/api/types/app/d
     >
       <!-- 自定义列：slot name 为列的 field 值 -->
       <template #status="{ row }">
-        <el-switch :model-value="row.status === 0" @change="(val: boolean) => handleStatusChange(row, val)" />
+        <DictTag :type="DICT_TYPE.COMMON_STATUS" :value="row.status" />
       </template>
       <!-- 操作列 -->
       <template #action="{ row }">
         <el-button type="primary" @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" @click="handleDelete(row.id)">删除</el-button>
+        <el-button type="danger" @click="handleDelete(row)">删除</el-button>
       </template>
     </Table>
   </ContentWrap>
@@ -285,39 +275,43 @@ import type { TriggerDetectionTaskAppAdminApiApiParams } from '@/api/types/app/d
 
 ```ts
 <script lang="ts" setup>
-import { reactive, ref, onMounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { reactive, ref, onMounted } from 'vue'
 import type { TableColumn } from '@/types/table'
+import type { FormSchema } from '@/types/form'
 import XxxForm from './XxxForm.vue'
 
-// 1. API 导入（从 auto 目录的自动生成文件）
+// 1. API 导入（优先使用 auto 目录的自动生成文件）
 import { ApiAppXxxAppAdminApiAuto } from '@/api/auto/app/xxx'
 
 // 2. @lingman/yd 工具导入
-import { formatDate } from '@lingman/yd'
+import { formatDate, DICT_TYPE } from '@lingman/yd'
 
 // 3. 组件名声明
 defineOptions({ name: 'Xxx' })
 
-// 4. 表格列定义（静态，置于响应式状态之前）
+// 4. 搜索表单配置（基于 FormSchema，由 PageReqVO 字段决定）
+const searchSchema = reactive<FormSchema[]>([
+  { field: 'name', label: '名称', component: 'Input', componentProps: { placeholder: '请输入名称', clearable: true } },
+  { field: 'status', label: '状态', component: 'Select', componentProps: { placeholder: '请选择状态', clearable: true, options: getIntDictOptions(DICT_TYPE.COMMON_STATUS) } }
+])
+
+// 5. 表格列定义（静态，置于响应式状态之前）
 const columns: TableColumn[] = [
-  { field: 'id', label: 'ID', width: 80 },
   { field: 'name', label: '名称', minWidth: 150 },
   { field: 'status', label: '状态', width: 100 },
   { field: 'createTime', label: '创建时间', width: 170, formatter: (_row, _col, val) => val ? formatDate(val) : '' },
   { field: 'action', label: '操作', width: 200, fixed: 'right' }
 ]
 
-// 5. 搜索参数
+// 6. 搜索参数（初始值统一为 undefined）
 const queryParams = reactive({
   name: undefined as string | undefined,
   status: undefined as number | undefined
 })
 
-const searchFormRef = ref()
 const formRef = ref()
 
-// 6. useTable hook：自动管理 loading、total、list、分页
+// 7. useTable hook：自动管理 loading、total、list、分页
 const { register, tableObject, methods } = useTable({
   getListApi: (params) =>
     ApiAppXxxAppAdminApiAuto.pageXxxAppAdminApi({
@@ -327,20 +321,14 @@ const { register, tableObject, methods } = useTable({
 })
 methods.getList()
 
-// 7. 搜索（自动防抖）
+// 8. 搜索与重置
 const handleQuery = () => {
   methods.setSearchParams({ ...queryParams })
 }
 
-let searchTimer: ReturnType<typeof setTimeout> | null = null
-watch(queryParams, () => {
-  if (searchTimer) clearTimeout(searchTimer)
-  searchTimer = setTimeout(handleQuery, 300)
-})
-
-// 8. 重置
 const handleReset = () => {
-  searchFormRef.value?.resetFields()
+  queryParams.name = undefined
+  queryParams.status = undefined
   methods.setSearchParams({})
 }
 
@@ -352,20 +340,131 @@ const handleEdit = (row: any) => {
   formRef.value?.open('update', row)
 }
 
-// 10. 删除
-const handleDelete = async (id: number) => {
-  await ElMessageBox.confirm('确认删除吗？', '提示', { type: 'warning' })
-  await ApiAppXxxAppAdminApiAuto.deleteXxxAppAdminApi({ id })
-  ElMessage.success('删除成功')
+// 10. 删除（先弹确认框，删除后刷新列表）
+const handleDelete = async (row: any) => {
+  await message.delConfirm('确认删除该记录吗？')
+  await ApiAppXxxAppAdminApiAuto.deleteXxxAppAdminApi({ id: row.id })
+  message.success('删除成功')
+  // 重新拉取列表，确保数据最新
   methods.getList()
 }
 
-// 11. 生命周期
 onMounted(() => {
-  // 加载字典、选项等
+  // 加载字典、选项等初始化逻辑
 })
 </script>
 ```
+
+### 5.3 搜索表单：何时用 `<Search>`，何时回退 `el-form`
+
+- **默认使用 `<Search>` 组件**：搜索字段 ≥ 2 个，或需要多列栅格布局、展开/收起、统一的搜索/重置按钮时。
+- **回退到原生 `el-form`**：搜索字段仅 1 个，或需要 `<Search>` 无法表达的自定义布局、联动交互、特殊样式。
+
+回退示例（仅 1 个搜索字段）：
+
+```vue
+<ContentWrap>
+  <el-form :inline="true" :model="queryParams" class="-mb-15px">
+    <el-form-item label="名称" prop="name">
+      <el-input v-model="queryParams.name" clearable placeholder="请输入名称" @keyup.enter="handleQuery" />
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" @click="handleQuery"><Icon icon="ep:search" />搜索</el-button>
+      <el-button @click="handleReset"><Icon icon="ep:refresh" />重置</el-button>
+    </el-form-item>
+  </el-form>
+</ContentWrap>
+```
+
+> 注意：回退到 `el-form` 仅限搜索区，**新增/编辑表单弹窗仍必须使用 `<Form>` 组件**（见第 6 节）。
+
+### 5.4 Search 组件使用规范
+
+`<Search>` 是基于 `FormSchema` 的搜索表单组件，由 `@lingman/yd` 提供。它与 `<Form>` 共用同一套 `FormSchema` 类型，但专为列表页搜索场景封装了**搜索**、**重置**按钮及布局。
+
+基础用法：
+
+```vue
+<Search
+  :schema="searchSchema"
+  :model="queryParams"
+  @search="handleQuery"
+  @reset="handleReset"
+>
+  <template #actionMore>
+    <el-button type="primary" @click="handleCreate">
+      <Icon class="mr-5px" icon="ep:plus" />新增
+    </el-button>
+  </template>
+</Search>
+```
+
+常用 Props：
+
+| Prop | 说明 | 类型 | 默认值 |
+|------|------|------|--------|
+| `schema` | 搜索项 Schema 配置 | `FormSchema[]` | `[]` |
+| `model` | 搜索参数对象（双向绑定） | `Recordable` | `{}` |
+| `inline` | 是否行内表单 | `boolean` | `true` |
+| `isCol` | 是否使用栅格布局 | `boolean` | `true` |
+| `expand` | 是否支持展开/收起 | `boolean` | `false` |
+| `showSearch` | 是否显示搜索按钮 | `boolean` | `true` |
+| `showReset` | 是否显示重置按钮 | `boolean` | `true` |
+| `labelWidth` | 标签宽度 | `string / number` | `120px` |
+| `buttomPosition` | 按钮位置 | `string` | — |
+
+常用 Slots：
+
+| Slot 名 | 说明 |
+|---------|------|
+| `actionMore` | 搜索/重置按钮右侧的额外操作区（如“新增”按钮） |
+
+搜索项 Schema 示例：
+
+```ts
+import type { FormSchema } from '@/types/form'
+
+const searchSchema = reactive<FormSchema[]>([
+  {
+    field: 'name',
+    label: '名称',
+    component: 'Input',
+    componentProps: { placeholder: '请输入名称', clearable: true }
+  },
+  {
+    field: 'status',
+    label: '状态',
+    component: 'Select',
+    componentProps: {
+      placeholder: '请选择状态',
+      clearable: true,
+      class: '!w-160px',
+      options: getIntDictOptions(DICT_TYPE.COMMON_STATUS)
+    }
+  },
+  {
+    field: 'createTime',
+    label: '创建时间',
+    component: 'DatePicker',
+    componentProps: {
+      type: 'daterange',
+      valueFormat: 'YYYY-MM-DD',
+      startPlaceholder: '开始日期',
+      endPlaceholder: '结束日期',
+      class: '!w-240px'
+    }
+  }
+])
+```
+
+使用注意事项：
+
+1. **搜索参数初始值**：`queryParams` 的每个字段初始值统一为 `undefined`，重置时手动将各字段重置为 `undefined`（而非调用 `resetFields`）。
+2. **事件绑定**：必须绑定 `@search="handleQuery"` 和 `@reset="handleReset"`，分别触发查询和重置逻辑。
+3. **查询逻辑**：`handleQuery` 内部调用 `methods.setSearchParams({ ...queryParams })`，由 `useTable` 驱动重新拉取列表。
+4. **新增按钮位置**：新增/导出等操作按钮放在 `<template #actionMore>` 插槽中，与搜索/重置按钮保持在同一行。
+5. **组件宽度**：`Select`、`DatePicker` 等表单组件在搜索区必须设置最小宽度，避免伸缩变形。通过 `componentProps: { class: '!w-xxxpx' }` 控制，例如 `!w-160px`（下拉框）、`!w-240px`（日期范围）。
+6. **回退条件**：仅当搜索条件只有 **1 个** 或自定义样式（如特殊布局、联动交互）`<Search>` 无法满足时，才回退到原生 `el-form`（回退示例见 5.3 节）。
 
 ---
 
@@ -373,7 +472,8 @@ onMounted(() => {
 
 ### 6.1 完整模板
 
-> **强制规则**：新增/编辑表单**必须使用 `<Form>` 组件**（基于 Schema 的动态表单），禁止直接使用 `<el-form>`。列表页搜索表单仍使用原生 `el-form`。
+> **强制规则**：新增/编辑表单**必须使用 `<Form>` 组件**（基于 Schema 的动态表单），禁止直接使用 `<el-form>`。
+> 列表页搜索表单**默认使用 `<Search>` 组件**（与 `<Form>` 共用 `FormSchema` 类型，专为搜索场景封装搜索/重置按钮和布局）；仅当搜索字段仅 1 个、或需要 `<Search>` 无法表达的自定义样式时，才回退到原生 `el-form`（回退示例见 5.3 节）。
 
 ```vue
 <template>

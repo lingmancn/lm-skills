@@ -11,7 +11,7 @@ hidden: true
 
 | Skill | 引用内容 |
 |-------|---------|
-| crud-generator | framework.md, code-template.md |
+| crud-generator | framework.md, code-template.md, frontend/frontend-spec.md |
 | sql-generator | db-spec.md |
 | doc-qa | api-docs/, api-index.md |
 | api-generator | framework.md |
@@ -26,4 +26,4 @@ hidden: true
 - [framework.md](framework.md) — 框架核心规范
 - [db-spec.md](db-spec.md) — 数据库建表规范
 - [api-docs/](api-docs/) — 模块 API 文档（20 个文档，10 个模块）
-- [frontend/](frontend/) — 前端开发规范（待补充）
+- [frontend/](frontend/) — 前端开发规范（frontend-spec.md，列表页/表单弹窗/Search 组件/@lingman/yd 全量组件清单等）

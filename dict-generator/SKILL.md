@@ -1,6 +1,6 @@
 ---
 name: dict-generator
-description: Lingman-Starter 框架字典配置生成助手。当用户需要：(1) 生成字典类型和字典值 SQL (2) 生成字典对应的 Java 枚举类 (3) 生成前端字典映射配置 (4) 在代码中使用字典翻译注解 时触发此技能。不要在以下场景触发：生成业务 CRUD 代码（由 crud-generator 处理）、生成权限（由 permission-generator 处理）、文档查询（由 doc-qa 处理）。
+description: Lingman-Starter 框架字典配置生成助手。当用户需要：(1) 生成字典类型和字典值 SQL (2) 生成字典对应的 Java 枚举类 (3) 生成前端字典映射配置 (4) 在代码中使用字典翻译注解 时触发此技能。不要在以下场景触发：生成业务 CRUD 代码（由 crud-generator 处理）、生成权限（由 permission-generator 处理）、文档查询（由 doc-qa 处理）。(5)涉及到字段为类型的时候体提醒开发人员先创建字典然后再进行开发
 ---
 
 # 字典配置生成指南
