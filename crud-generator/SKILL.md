@@ -28,8 +28,7 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 │   └── vo/
 │       ├── {Name}SaveReqVO.java
 │       ├── {Name}RespVO.java
-│       ├── {Name}PageReqVO.java
-│       └── {Name}DeleteReqVO.java  # 仅当项目没有公共删除/ID 请求 VO 时生成
+│       └── {Name}PageReqVO.java
 └── service/admin/
     ├── {Name}Service.java
     └── impl/
@@ -38,17 +37,26 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 
 `$MODULE_ROOT` 为项目根目录。
 
+> 单 ID 删除/操作请求**统一使用** `controller/admin/common_vo/AdminDeleteReqVO.java`（全项目共享的公共类，不为各业务单独生成；若项目尚无该类需先新增，详见「后端接口强制规则」）。
+
 ## 代码规范
 
 参见 [framework.md](../lingman-core/framework.md)。
 
 ### 后端接口强制规则
 
-- DELETE 请求禁止使用 `@RequestParam`、`@PathVariable` 或 URL 查询参数/路径参数传参。
-- DELETE 请求参数必须使用 `@RequestBody` 承载，通过 `deleteReqVO.getId()` 获取编号。
-- 单 ID 删除优先复用项目已有的公共删除/ID 请求 VO（如 `IdReqVO`、`DeleteReqVO`、`BaseIdReqVO` 等）；如果项目不存在可复用的公共 VO，才生成业务专属 `{Name}DeleteReqVO`。
-- DELETE Controller 方法必须使用 `@Valid @RequestBody {DeleteReqVO} deleteReqVO`，其中 `{DeleteReqVO}` 代表已存在的公共 VO 或兜底生成的 `{Name}DeleteReqVO`。
-- GET 查询/分页仍按框架规范使用 `@RequestParam` 或 `@Valid PageReqVO`，不要套用 DELETE 规则。
+> 完整规范参见 [framework.md](../lingman-core/framework.md)「Controller 层规范」。以下为生成代码时必须逐条遵循的硬性规则。
+
+- **接口路径不可重复**：禁止"同路径不同请求方式"（如 `/app/task` 同时存在 GET 与 POST）。全项目所有接口路径必须唯一；新增接口前须确认路径未被占用。
+- **请求参数约定**：
+  - GET 请求可用 `@RequestParam`、`@PathVariable` 传参；
+  - **POST / PUT / DELETE / PATCH 等非 GET 请求一律使用 `@RequestBody` 传参**，禁止 `@RequestParam`、`@PathVariable`、URL 查询参数或路径参数。
+- **单 ID 请求（删除、单 ID 操作等）统一规则**：
+  - 字段名**统一为 `id`**，禁止使用业务前缀（如 `taskId`、`userId`、`xxxId`）。
+  - **统一使用公共请求类 `AdminDeleteReqVO`**（路径 `controller/admin/common_vo/AdminDeleteReqVO.java`），**禁止为各业务模块单独生成 `{Name}DeleteReqVO` 等同义类**。
+  - Controller 方法签名：`delete(@Valid @RequestBody AdminDeleteReqVO reqVO)`，通过 `reqVO.getId()` 取值。
+  - 生成业务代码前，**先确认 `AdminDeleteReqVO` 是否已存在**；若项目尚无该类，必须先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增该类，再继续生成业务代码。
+- GET 查询/分页仍按框架规范使用 `@RequestParam` 或 `@Valid PageReqVO`，不受上述非 GET 规则约束。
 
 ## 前置条件：CLI 工具生成 DO/Mapper
 
@@ -119,13 +127,18 @@ lm u
 
 定期执行更新保持 CLI 工具为最新版本。
 
-### 生成前端 API
+### 接口变动与前端 API 同步
+
+只要后端接口发生变动（请求参数、响应参数的增删改），必须按以下流程联动同步，不得跳过：
+
+1. **重启后端服务**：确保 Swagger 文档（`/v3/api-docs`）反映最新接口。可由开发者手动重启，或由 AI 自动重启——**AI 自动重启前必须征得用户确认**。
+2. **同步前端接口**：在前端工程根目录下执行 `lm api`，从后端 Swagger 地址自动生成前端接口定义（接口方法、入参/响应类型封装）。`lm api` 为只读同步命令，可直接执行无需额外许可。
+3. **引用 API**：前端代码引用接口时，必须使用 `lm api` 同步生成的方法，统一从 `src/api/auto/` 导入；该目录由命令全量覆盖，**禁止手动修改**。
 
 ```bash
+# 在前端工程根目录下执行
 lm api
 ```
-
-该命令根据后端 Swagger 地址（如 `/v3/api-docs`）自动生成前端接口定义，包含接口方法、入参类型和响应类型封装，需要在前端工程根目录下执行。
 
 ## 交互流程
 
@@ -146,6 +159,7 @@ lm api
 1. 检查项目是否已配置 `lingman.config.json`（如未配置，提示用户运行 `lm init java`）
 2. 对于场景 A：提示用户先通过 `lm mapper` 生成 DO 和 Mapper
 3. 对于场景 B：确认 DO 和 Mapper 已存在于项目中
+4. 确认公共单 ID 请求类 `controller/admin/common_vo/AdminDeleteReqVO.java` 已存在；若不存在，先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增
 
 #### Step 1 — 收集配置选项 ⛔ 硬性确认
 
@@ -168,18 +182,7 @@ lm api
 
 #### Step 3 — 展示文件清单 ⛔ 硬性确认
 
-列出将要生成的全部文件路径，格式如下：
-
-```
-将生成以下文件：
-- src/main/java/com/lm/app/controller/admin/{biz}/{Name}Controller.java
-- src/main/java/com/lm/app/controller/admin/{biz}/vo/{Name}SaveReqVO.java
-- src/main/java/com/lm/app/controller/admin/{biz}/vo/{Name}RespVO.java
-- src/main/java/com/lm/app/controller/admin/{biz}/vo/{Name}PageReqVO.java
-- src/main/java/com/lm/app/service/{biz}/{Name}Service.java
-- src/main/java/com/lm/app/service/{biz}/impl/{Name}ServiceImpl.java
-- src/main/java/com/lm/app/convert/{biz}/{Name}Convert.java
-```
+参照「文件路径模板」，将 `{biz}` / `{Name}` 替换为本次实际值，向用户逐条展示将要生成的完整文件路径（含 Controller、各 VO、Service/ServiceImpl、Convert）。
 
 > **用户必须明确回复"确认"后，才能进入 Step 4。禁止在用户确认前生成任何代码。**  
 > 如果用户回复"开始"、"生成"、"OK"等，都视为确认。
@@ -188,23 +191,21 @@ lm api
 
 按以下顺序生成文件，同批次内的文件可并行写入：
 
-1. VO 类（SaveReqVO → RespVO → PageReqVO；若项目没有公共删除/ID 请求 VO，则额外生成 DeleteReqVO）
+1. VO 类（SaveReqVO → RespVO → PageReqVO）
 2. Convert
 3. Service 接口 + 实现
 4. Controller
 
 #### Step 5 — 输出清单
 
-列出所有已生成的文件路径，并提示后续操作：
+列出所有已生成的文件路径（参照「文件路径模板」），并提示后续操作：
 
 ```
-已生成以下文件：
-- ... (列表)
-
 后续操作建议：
 1. 在 ErrorCodeConstants.java 中添加错误码
 2. 如需权限控制，使用 permission-generator 生成权限配置
 3. 如需生成建表 SQL，使用 sql-generator
+4. 接口已变动，执行「接口变动与前端 API 同步」流程（重启后端 → 前端 `lm api`）
 ```
 
 ---

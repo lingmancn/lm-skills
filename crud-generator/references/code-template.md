@@ -6,6 +6,7 @@
 package com.lm.app.controller.admin.{biz};
 
 import com.lm.app.controller.admin.{biz}.vo.*;
+import com.lm.app.controller.admin.common_vo.AdminDeleteReqVO;
 import com.lm.app.service.{biz}.{Name}Service;
 import com.lm.starter.framework.common.pojo.CommonResult;
 import com.lm.starter.framework.common.pojo.PageResult;
@@ -40,7 +41,7 @@ public class {Name}Controller {
 
     @DeleteMapping("/delete")
     @Operation(summary = "删除{BizName}")
-    public CommonResult<Boolean> delete(@Valid @RequestBody {DeleteReqVO} deleteReqVO) {
+    public CommonResult<Boolean> delete(@Valid @RequestBody AdminDeleteReqVO deleteReqVO) {
         {name}Service.delete(deleteReqVO.getId());
         return success(true);
     }
@@ -69,14 +70,19 @@ import com.lm.app.controller.admin.{biz}.vo.*;
 
 public interface {Name}Service {
 
+    /** 创建{BizName} */
     Long create({Name}SaveReqVO createReqVO);
 
+    /** 更新{BizName} */
     void update({Name}SaveReqVO updateReqVO);
 
+    /** 删除{BizName} */
     void delete(Long id);
 
+    /** 获取{BizName}详情 */
     {Name}RespVO get(Long id);
 
+    /** 分页查询{BizName} */
     PageResult<{Name}RespVO> page({Name}PageReqVO pageReqVO);
 }
 ```
@@ -113,7 +119,10 @@ public class {Name}ServiceImpl implements {Name}Service {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create({Name}SaveReqVO createReqVO) {
+        // 1. 业务规则校验（按需补充，如唯一性、关联存在性校验）
+        // 2. SaveReqVO → DO 转换
         {Name}DO entity = {name}Convert.convert(createReqVO);
+        // 3. 持久化并回填主键
         {name}Mapper.insert(entity);
         return entity.getId();
     }
@@ -121,37 +130,47 @@ public class {Name}ServiceImpl implements {Name}Service {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update({Name}SaveReqVO updateReqVO) {
+        // 1. 校验存在
         validate{Name}Exists(updateReqVO.getId());
+        // 2. SaveReqVO → DO 转换，清理更新保护字段
         {Name}DO updateObj = {name}Convert.convert(updateReqVO);
         updateObj.clean();
+        // 3. 按 ID 更新
         {name}Mapper.updateById(updateObj);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
+        // 1. 校验存在
         validate{Name}Exists(id);
+        // 2. 按 ID 删除
         {name}Mapper.deleteById(id);
     }
 
     @Override
     public {Name}RespVO get(Long id) {
+        // 1. 按 ID 查询，不存在则抛异常
         {Name}DO entity = {name}Mapper.selectById(id);
         if (entity == null) {
             throw exception(ErrorCodeConstants.{NAME}_NOT_EXISTS);
         }
+        // 2. DO → RespVO 转换
         return {name}Convert.convert(entity);
     }
 
     @Override
     public PageResult<{Name}RespVO> page({Name}PageReqVO pageReqVO) {
+        // 1. 构建查询条件（按需补充业务查询字段）
         LambdaQueryWrapperX<{Name}DO> queryWrapper = new LambdaQueryWrapperX<>();
         // queryWrapper.likeIfPresent({Name}DO::getName, pageReqVO.getName());
         queryWrapper.orderByDesc({Name}DO::getId);
+        // 2. 分页查询并转换为 RespVO
         return {name}Mapper.selectPage(pageReqVO, queryWrapper)
             .convert({name}Convert::convert);
     }
 
+    // 校验 {BizName} 是否存在，不存在则抛出 {NAME}_NOT_EXISTS 异常
     private void validate{Name}Exists(Long id) {
         if (id == null || {name}Mapper.selectById(id) == null) {
             throw exception(ErrorCodeConstants.{NAME}_NOT_EXISTS);
@@ -221,20 +240,27 @@ public class {Name}SaveReqVO {
 }
 ```
 
-### DeleteReqVO（兜底模板）
+### AdminDeleteReqVO（公共单 ID 请求类）
 
-> 单 ID 删除优先复用项目已有的公共删除/ID 请求 VO（如 `IdReqVO`、`DeleteReqVO`、`BaseIdReqVO` 等）。只有项目没有可复用公共 VO 时，才生成该业务专属 `{Name}DeleteReqVO`。
+> 全项目统一的公共单 ID 请求类，**删除、单 ID 操作等仅需传递一个主键 id 的非 GET 接口统一使用本类**，禁止各业务模块自行定义 `{Name}DeleteReqVO` 等同义类。
+>
+> 路径固定为 `controller/admin/common_vo/AdminDeleteReqVO.java`。生成业务代码前若该类不存在，必须先新增；存在则直接引用。
 
 ```java
-package com.lm.app.controller.admin.{biz}.vo;
+package com.lm.app.controller.admin.common_vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * 管理后台通用单 ID 请求 VO
+ * <p>
+ * 适用于删除等仅需传递一个主键 id 的非 GET 接口。
+ */
 @Data
-@Schema(description = "管理后台 - {BizName}删除 Request VO")
-public class {Name}DeleteReqVO {
+@Schema(description = "管理后台 - 通用单 ID 请求 VO")
+public class AdminDeleteReqVO {
 
     @Schema(description = "编号", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "编号不能为空")
@@ -288,52 +314,6 @@ public class {Name}PageReqVO extends PageParam {
     private String name;
 
     // 其他查询条件...
-}
-```
-
-## DO 模板
-
-```java
-package com.lm.app.models.entity;
-
-import com.baomidou.mybatisplus.annotation.*;
-import com.lm.starter.framework.mybatis.core.dataobject.BaseDO;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-@TableName("t_{name}")
-@KeySequence("{name}_seq")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class {Name}DO extends BaseDO {
-
-    @TableId(value = "id")
-    private Long id;
-
-    @TableField("name")
-    private String name;
-
-    // 其他字段...
-}
-```
-
-## Mapper 模板
-
-```java
-package com.lm.app.models.mapper;
-
-import com.lm.app.models.entity.{Name}DO;
-import com.lm.starter.framework.mybatis.core.mapper.BaseMapperX;
-import org.apache.ibatis.annotations.Mapper;
-
-@Mapper
-public interface {Name}Mapper extends BaseMapperX<{Name}DO> {
 }
 ```
 

@@ -150,18 +150,23 @@ public class DetectionTaskSaveReqVO {
 }
 ```
 
-#### DetectionTaskDeleteReqVO.java
+#### AdminDeleteReqVO.java（公共类，路径 controller/admin/common_vo/）
 
 ```java
-package com.lm.app.controller.admin.detectiontask.vo;
+package com.lm.app.controller.admin.common_vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * 管理后台通用单 ID 请求 VO
+ * <p>
+ * 适用于删除等仅需传递一个主键 id 的非 GET 接口，全项目统一使用。
+ */
 @Data
-@Schema(description = "管理后台 - 检测任务删除 Request VO")
-public class DetectionTaskDeleteReqVO {
+@Schema(description = "管理后台 - 通用单 ID 请求 VO")
+public class AdminDeleteReqVO {
 
     @Schema(description = "编号", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "编号不能为空")
@@ -319,7 +324,10 @@ public class DetectionTaskServiceImpl implements DetectionTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(DetectionTaskSaveReqVO createReqVO) {
+        // 1. 业务规则校验（按需补充，如任务名称唯一性校验）
+        // 2. SaveReqVO → DO 转换
         TaskDO detectionTask = detectionTaskConvert.convert(createReqVO);
+        // 3. 持久化并回填主键
         detectionTaskMapper.insert(detectionTask);
         return detectionTask.getId();
     }
@@ -327,43 +335,48 @@ public class DetectionTaskServiceImpl implements DetectionTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(DetectionTaskSaveReqVO updateReqVO) {
+        // 1. 校验存在
         validateDetectionTaskExists(updateReqVO.getId());
+        // 2. SaveReqVO → DO 转换，清理更新保护字段
         TaskDO updateObj = detectionTaskConvert.convert(updateReqVO);
         updateObj.clean();
+        // 3. 按 ID 更新
         detectionTaskMapper.updateById(updateObj);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
+        // 1. 校验存在
         validateDetectionTaskExists(id);
+        // 2. 按 ID 删除
         detectionTaskMapper.deleteById(id);
     }
 
     @Override
     public DetectionTaskRespVO get(Long id) {
+        // 1. 按 ID 查询，不存在则抛异常
         TaskDO task = detectionTaskMapper.selectById(id);
         if (task == null) {
             throw exception(ErrorCodeConstants.DETECTION_TASK_NOT_EXISTS);
         }
+        // 2. DO → RespVO 转换
         return detectionTaskConvert.convert(task);
     }
-    /**
- * 分页查询检测任务
- * <p>支持按任务名称模糊搜索、按状态精确过滤，默认按ID倒序排列</p>
- */
+
     @Override
     public PageResult<DetectionTaskRespVO> page(DetectionTaskPageReqVO pageReqVO) {
+        // 1. 构建查询条件：任务名称模糊搜索、状态精确过滤，按 ID 倒序
         LambdaQueryWrapperX<TaskDO> queryWrapper = new LambdaQueryWrapperX<>();
         queryWrapper.likeIfPresent(TaskDO::getTaskName, pageReqVO.getTaskName());
         queryWrapper.eqIfPresent(TaskDO::getStatus, pageReqVO.getStatus());
         queryWrapper.orderByDesc(TaskDO::getId);
+        // 2. 分页查询并转换为 RespVO
         return detectionTaskMapper.selectPage(pageReqVO, queryWrapper)
             .convert(detectionTaskConvert::convert);
     }
-    /**
- * 校验检测任务是否存在，不存在则抛出 DETECTION_TASK_NOT_EXISTS 异常
- */
+
+    // 校验检测任务是否存在，不存在则抛出 DETECTION_TASK_NOT_EXISTS 异常
     private void validateDetectionTaskExists(Long id) {
         if (id == null || detectionTaskMapper.selectById(id) == null) {
             throw exception(ErrorCodeConstants.DETECTION_TASK_NOT_EXISTS);
@@ -379,7 +392,7 @@ public class DetectionTaskServiceImpl implements DetectionTaskService {
 ```java
 package com.lm.app.controller.admin.detectiontask;
 
-import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskDeleteReqVO;
+import com.lm.app.controller.admin.common_vo.AdminDeleteReqVO;
 import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskPageReqVO;
 import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskRespVO;
 import com.lm.app.controller.admin.detectiontask.vo.DetectionTaskSaveReqVO;
@@ -417,7 +430,7 @@ public class DetectionTaskController {
 
     @DeleteMapping("/delete")
     @Operation(summary = "删除检测任务")
-    public CommonResult<Boolean> delete(@Valid @RequestBody DetectionTaskDeleteReqVO deleteReqVO) {
+    public CommonResult<Boolean> delete(@Valid @RequestBody AdminDeleteReqVO deleteReqVO) {
         detectionTaskService.delete(deleteReqVO.getId());
         return success(true);
     }

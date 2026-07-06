@@ -283,7 +283,7 @@ public class {Name}Controller {
 
     @DeleteMapping("/delete")
     @Operation(summary = "删除{BizName}")
-    public CommonResult<Boolean> delete(@Valid @RequestBody {DeleteReqVO} deleteReqVO) {
+    public CommonResult<Boolean> delete(@Valid @RequestBody AdminDeleteReqVO deleteReqVO) {
         {name}Service.delete(deleteReqVO.getId());
         return success(true);
     }
@@ -308,7 +308,9 @@ public class {Name}Controller {
 - 需要校验的入参加 `@Valid`
 - URL 前缀统一 `/app/{biz}`，kebab-case（如 `/detection-task`）
 - RESTful HTTP 方法：POST 创建、PUT 更新、DELETE 删除、GET 查询/分页
-- DELETE 请求禁止使用 `@RequestParam` / `@PathVariable` / URL 查询参数传参，必须使用 `@RequestBody` 承载请求体；单 ID 删除优先复用项目已有的公共删除/ID 请求 VO（如 `IdReqVO`、`DeleteReqVO`、`BaseIdReqVO` 等），如果项目不存在可复用的公共 VO，才定义业务专属删除请求 VO（如 `{Name}DeleteReqVO`），并通过 `deleteReqVO.getId()` 获取编号
+- **接口路径不可重复**：禁止"同路径不同请求方式"（同一 URL 不得同时存在 GET 与 POST 等），全项目所有接口路径必须唯一
+- **请求参数约定**：GET 请求可用 `@RequestParam` / `@PathVariable`；POST / PUT / DELETE / PATCH 等非 GET 请求**一律使用 `@RequestBody` 传参**，禁止 `@RequestParam` / `@PathVariable` / URL 查询参数 / 路径参数
+- **单 ID 请求统一规则**：删除等仅需传递一个主键 id 的非 GET 接口，字段名**统一为 `id`**（禁止业务前缀如 `taskId`），**统一使用公共请求类 `AdminDeleteReqVO`**（路径 `controller/admin/common_vo/AdminDeleteReqVO.java`），通过 `deleteReqVO.getId()` 取值；禁止各业务模块自行定义 `{Name}DeleteReqVO` 等同义类，若项目尚无该类需先新增
 - 注入方式：`@Resource`
 - 使用 `CommonResult.success(...)` 静态导入
 - 分页接口用 `@GetMapping` + `@Valid PageReqVO`（不是 `@RequestBody`），如果存在列表或者参数过多的情况下需要调整为`Post`请求

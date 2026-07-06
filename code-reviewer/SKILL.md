@@ -50,6 +50,9 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 - [ ] 类上有 `@Validated`
 - [ ] 管理端方法有 `@PreAuthorize("@ss.hasPermission('xxx')")`
 - [ ] 入参有 `@Valid`（POST/PUT）
+- [ ] 接口路径全局唯一，无"同路径不同请求方式"冲突
+- [ ] 非 GET 请求（POST/PUT/DELETE/PATCH）一律使用 `@RequestBody`，未误用 `@RequestParam` / `@PathVariable`
+- [ ] 单 ID 删除/操作统一使用公共类 `AdminDeleteReqVO`（`common_vo/AdminDeleteReqVO.java`），字段名为 `id`，未自行定义 `{Name}DeleteReqVO`
 - [ ] 返回类型为 `CommonResult<T>`
 - [ ] Swagger 注解完整：`@Operation(summary = "...")`
 
