@@ -2,7 +2,7 @@
 
 基于 Lingman-Starter 框架（派生自芋道 yudao）的 AI Skills 集合，帮助业务开发者快速生成符合公司规范的代码、SQL、接口文档等。
 
-## 包含的 Skills（9 个 + 1 共享层）
+## 包含的 Skills（10 个 + 1 共享层）
 
 | Skill | 触发场景 | 优先级 |
 |-------|---------|--------|
@@ -15,6 +15,7 @@
 | **dict-generator** | 生成字典类型、字典值、枚举类 | 推荐 |
 | **api-generator** | 设计 REST API 接口（URL、参数、响应结构） | 推荐 |
 | **test-generator** | 生成 Controller 集成测试、Service 单元测试 | 推荐 |
+| **project-md-generator** | 生成/规范化项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等） | 推荐 |
 | **lingman-core** | 共享知识层（框架规范、API 文档、前端规范），供所有 Skill 引用 | 依赖 |
 
 ## 技术栈规范
@@ -65,6 +66,7 @@ https://github.com/lingmancn/lm-skills
 - `dict-generator`
 - `api-generator`
 - `test-generator`
+- `project-md-generator`
 
 ### 方式二：手动安装（备用）
 
@@ -76,7 +78,7 @@ git clone https://github.com/lingmancn/lm-skills.git ~/.claude/skills/lingman-sk
 
 # 2. 创建 symlink
 cd ~/.claude/skills
-for skill in crud-generator sql-generator doc-qa error-analyzer permission-generator code-reviewer dict-generator api-generator test-generator lingman-core; do
+for skill in crud-generator sql-generator doc-qa error-analyzer permission-generator code-reviewer dict-generator api-generator test-generator project-md-generator lingman-core; do
   ln -s lingman-skills/$skill .
 done
 ```
@@ -114,6 +116,7 @@ lingman-skills/
 ├── dict-generator/            # Skill: 字典配置生成
 ├── api-generator/             # Skill: 接口设计
 ├── test-generator/            # Skill: 测试代码生成
+├── project-md-generator/      # Skill: 项目 AI 记忆 md 生成/规范化
 ```
 
 ## 使用方式
@@ -130,6 +133,7 @@ lingman-skills/
 "新增一个公告类型字典"                      → 触发 dict-generator
 "设计一下公告管理接口"                      → 触发 api-generator
 "给公告管理生成测试"                        → 触发 test-generator
+"初始化项目，生成 CLAUDE.md"               → 触发 project-md-generator
 ```
 
 ## 与 CLI 工具配合

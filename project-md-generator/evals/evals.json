@@ -1,0 +1,33 @@
+{
+  "skill_name": "project-md-generator",
+  "evals": [
+    {
+      "id": 1,
+      "name": "全新生成-中小后端项目",
+      "prompt": "我刚接手一个 SpringBoot 后端项目，之前从来没有 CLAUDE.md 这类文件。帮我初始化一下，生成一个让 AI 能快速理解项目的 md 文件。项目根目录是当前目录。",
+      "expected_output": "生成一个根目录 md（默认询问 IDE 或用 AGENTS.md），严格套用 root-template.md 的章节顺序；开发约束 + 维护触发条件逐字一致；常用命令来自 pom.xml/mvnw 实测；不超过 160 行；中小项目不生成分层 md。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "规范化现有散乱 md",
+      "prompt": "我们项目里有一堆乱七八糟的 md 文件，有 README、有同事手写的 NOTES、还有过时的开发文档，口径都不一致。帮我把它们规范化成一个标准的 AGENTS.md。",
+      "expected_output": "先读全部现有 md 提取有效信息，再按 root-template.md 重写合并成一个根 md；指出哪些内容下沉到 docs/；逐字段落保持一致；不丢原有有效信息。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "庞大前后端项目生成分层 md",
+      "prompt": "这是一个前后端单体仓库，前端 Vue3 + 后端 SpringBoot 多模块，体量比较大。帮我生成 AI 记忆文件，需要的话各分层目录也放说明。",
+      "expected_output": "判定为庞大项目；生成根 md（≤160 行）+ 在 controller/service/前端 views 等关键分层目录各生成一个同名 md（≤100 行，不套根模板，内容聚焦该层）；分层 md 文件名与根 md 一致以支持自动加载。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "命令实测与禁止编造",
+      "prompt": "给这个项目生成 CLAUDE.md，常用命令部分一定要确保都能跑。",
+      "expected_output": "命令来自 package.json scripts / mvnw / Maven 目标等真实来源，能跑的实际执行确认；不编造不存在的命令或技术栈；不确定的标注待补充并询问。",
+      "files": []
+    }
+  ]
+}
