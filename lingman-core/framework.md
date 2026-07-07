@@ -262,7 +262,7 @@ public class {Name}ServiceImpl implements {Name}Service {
 ```java
 @Tag(name = "管理后台 - {BizName}")
 @RestController
-@RequestMapping("/app/{biz}")
+@RequestMapping("/admin/{biz}")
 public class {Name}Controller {
 
     @Resource
@@ -306,7 +306,7 @@ public class {Name}Controller {
 - 必须加 `@Tag`、`@Operation` Swagger 注解
 - 入参用 VO，出参用 `CommonResult<T>`
 - 需要校验的入参加 `@Valid`
-- URL 前缀统一 `/app/{biz}`，kebab-case（如 `/detection-task`）
+- URL 前缀统一 `/admin/{biz}`，kebab-case（如 `/detection-task`）
 - RESTful HTTP 方法：POST 创建、PUT 更新、DELETE 删除、GET 查询/分页
 - **接口路径不可重复**：禁止"同路径不同请求方式"（同一 URL 不得同时存在 GET 与 POST 等），全项目所有接口路径必须唯一
 - **请求参数约定**：GET 请求可用 `@RequestParam` / `@PathVariable`；POST / PUT / DELETE / PATCH 等非 GET 请求**一律使用 `@RequestBody` 传参**，禁止 `@RequestParam` / `@PathVariable` / URL 查询参数 / 路径参数

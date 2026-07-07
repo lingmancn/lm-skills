@@ -7,7 +7,7 @@
 - [ ] **包名正确**：`com.lm.app.controller.admin.{biz}` 或 `com.lm.app.controller.app.{biz}`
 - [ ] **类注解完整**：`@Tag` + `@RestController` + `@RequestMapping` + `@Validated`
 - [ ] **URL 前缀正确**：
-  - 管理端：`/app/{biz}`
+  - 管理端：`/admin/{biz}`
   - 用户端：`/app/{biz}`
 - [ ] **权限注解**：管理端接口必须有 `@PreAuthorize("@ss.hasPermission('xxx')")`
 - [ ] **入参校验**：POST/PUT 请求体必须有 `@Valid`

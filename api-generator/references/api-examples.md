@@ -11,7 +11,7 @@
 
 #### 1. 创建车辆
 ```
-POST /app/vehicle/create
+POST /admin/vehicle/create
 ```
 - **权限**：`stuff:vehicle:create`
 - **请求体**：VehicleCreateReqVO
@@ -24,7 +24,7 @@ POST /app/vehicle/create
 
 #### 2. 更新车辆
 ```
-POST /app/vehicle/update
+POST /admin/vehicle/update
 ```
 - **权限**：`stuff:vehicle:update`
 - **请求体**：VehicleUpdateReqVO
@@ -38,7 +38,7 @@ POST /app/vehicle/update
 
 #### 3. 删除车辆
 ```
-GET /app/vehicle/delete
+GET /admin/vehicle/delete
 ```
 - **权限**：`stuff:vehicle:delete`
 - **请求参数**：id (long, query, required)
@@ -47,7 +47,7 @@ GET /app/vehicle/delete
 
 #### 4. 查询详情
 ```
-GET /app/vehicle/get
+GET /admin/vehicle/get
 ```
 - **权限**：`stuff:vehicle:query`
 - **请求参数**：id (long, query, required)
@@ -55,7 +55,7 @@ GET /app/vehicle/get
 
 #### 5. 分页查询
 ```
-POST /app/vehicle/page
+POST /admin/vehicle/page
 ```
 - **权限**：`stuff:vehicle:query`
 - **请求体**：VehiclePageReqVO
@@ -68,7 +68,7 @@ POST /app/vehicle/page
 
 #### 6. 状态统计
 ```
-GET /app/vehicle/status-count
+GET /admin/vehicle/status-count
 ```
 - **权限**：`stuff:vehicle:query`
 - **响应**：`CommonResult<Map<String, Long>>`

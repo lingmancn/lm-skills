@@ -19,6 +19,7 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 | **SQL 安全** | 是否使用 `${}` 拼接 SQL | 高 |
 | **返回格式** | 是否使用 `CommonResult<T>` 包装 | 中 |
 | **VO 隔离** | Controller 是否直接返回 DO | 高 |
+| **日志规范** | 是否用 `@Slf4j`、套用 `[线程id][操作人][模块][动作] key={}` 公式、含唯一 ID、异常末位、未打大对象、未拼字符串、未泄露敏感数据 | 中 |
 
 > **前端审查维度**：详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)
 > - API 层：是否从 `api/auto/` 导入自动生成的 API 对象（`import { ApiAppXxxAppAdminApiAuto }`），禁止直接手写 URL
@@ -46,7 +47,7 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 ### Controller 层
 
 - [ ] 类上有 `@Tag` + `@RestController` + `@RequestMapping`
-- [ ] 管理端 URL 前缀正确：`/app/{biz}` 或 `/app/{biz}`
+- [ ] 管理端 URL 前缀正确：`/admin/{biz}`（管理端）、`/app/{biz}`（用户端）
 - [ ] 类上有 `@Validated`
 - [ ] 管理端方法有 `@PreAuthorize("@ss.hasPermission('xxx')")`
 - [ ] 入参有 `@Valid`（POST/PUT）
@@ -64,6 +65,20 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 - [ ] 写操作有 `@Transactional(rollbackFor = Exception.class)`
 - [ ] 使用 `throw exception(ErrorCodeConstants.XXX)` 抛业务异常
 - [ ] 查询结果判空后再使用
+
+### 日志
+
+- [ ] 统一使用 Lombok `@Slf4j`（字段名 `log`），未手写 `LoggerFactory.getLogger(...)`
+- [ ] **套用结构化公式** `[线程id] [操作人] [业务模块] [业务动作], key={}, ...`，带四要素前缀
+- [ ] 每条日志**包含唯一标识符（ID）**，可追溯具体记录
+- [ ] 用 `{}` 占位符，未用字符串拼接
+- [ ] 异常对象作为最后一个参数，未拼进消息、未吞堆栈（不只 `e.getMessage()`）
+- [ ] 未打印完整大对象（DO/VO/List/Map），只打关键 ID 或摘要
+- [ ] 未写自然语言长句
+- [ ] 昂贵操作用 `isDebugEnabled()` / `isInfoEnabled()` 守卫
+- [ ] 日志级别合理（ERROR/WARN/INFO/DEBUG）
+- [ ] 未记录密码、token、身份证、手机号、银行卡等敏感数据
+- [ ] 循环/高频路径未打 `INFO` 及以上日志
 
 ### VO 层
 
@@ -194,6 +209,35 @@ private LocalDateTime createTime;
 @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 private LocalDateTime createTime;
 ```
+
+### 问题：日志不符合结构化公式（缺四要素 / 长句 / 拼接 / 打印大对象）
+
+```java
+// ❌ 错误：自然语言长句 + 字符串拼接 + 吞堆栈 + 打印大对象，无法追溯来源
+@Service
+public class XxxServiceImpl implements XxxService {
+    public void doSomething(Long id) {
+        log.info("处理完成了，id=" + id + "，对象是" + xxxDO);
+        log.error("处理失败: " + e.getMessage());
+    }
+}
+
+// ✅ 正确：[线程id] [操作人] [业务模块] [业务动作] + 唯一 ID + 异常末位
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class XxxServiceImpl implements XxxService {
+    public void doSomething(Long id) {
+        log.info("[{}] [{}] [XXX模块] [处理XXX], id={}",
+                 Thread.currentThread().threadId(), SecurityFrameworkUtils.getLoginUserId(), id);
+        log.error("[{}] [{}] [XXX模块] [处理失败], id={}",
+                  Thread.currentThread().threadId(), SecurityFrameworkUtils.getLoginUserId(), id, e);
+    }
+}
+```
+
+> 五要素（线程id + 操作人 + 模块 + 动作 + 唯一ID）齐全，才能让人 grep 追溯到具体来源。
 
 ## 参考文档
 

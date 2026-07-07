@@ -409,7 +409,7 @@ import static com.lm.starter.framework.common.pojo.CommonResult.success;
 
 @Tag(name = "管理后台 - 检测任务")
 @RestController
-@RequestMapping("/app/detection-task")
+@RequestMapping("/admin/detection-task")
 public class DetectionTaskController {
 
     @Resource

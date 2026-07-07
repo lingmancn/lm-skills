@@ -62,7 +62,7 @@ class {Name}ControllerTest extends AbstractSpringBootMvcIntegrationTest {
     @Test
     void page_returnsOk() throws Exception {
         mockMvc.perform(
-                post("/app/{biz}/page")
+                post("/admin/{biz}/page")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}")
                     .with(integrationAuth()))
@@ -82,7 +82,7 @@ class {Name}ControllerTest extends AbstractSpringBootMvcIntegrationTest {
         Assumptions.assumeTrue(one != null, "无数据时跳过");
 
         mockMvc.perform(
-                get("/app/{biz}/get")
+                get("/admin/{biz}/get")
                     .param("id", String.valueOf(one.getId()))
                     .with(integrationAuth()))
             .andExpect(status().isOk())
@@ -100,7 +100,7 @@ class {Name}ControllerTest extends AbstractSpringBootMvcIntegrationTest {
             """;
 
         String resp = mockMvc.perform(
-                post("/app/{biz}/create")
+                post("/admin/{biz}/create")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body)
                     .with(integrationAuth()))

@@ -20,7 +20,7 @@ import static com.lm.starter.framework.common.pojo.CommonResult.success;
 
 @Tag(name = "管理后台 - {BizName}")
 @RestController
-@RequestMapping("/app/{biz}")
+@RequestMapping("/admin/{biz}")
 public class {Name}Controller {
 
     @Resource

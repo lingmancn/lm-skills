@@ -51,7 +51,7 @@ $MODULE_ROOT/src/main/java/com/lm/app/
 
 > 完整规范参见 [framework.md](../lingman-core/framework.md)「Controller 层规范」。以下为生成代码时必须逐条遵循的硬性规则。
 
-- **接口路径不可重复**：禁止"同路径不同请求方式"（如 `/app/task` 同时存在 GET 与 POST）。全项目所有接口路径必须唯一；新增接口前须确认路径未被占用。
+- **接口路径不可重复**：禁止"同路径不同请求方式"（如 `/admin/task` 同时存在 GET 与 POST）。全项目所有接口路径必须唯一；新增接口前须确认路径未被占用。
 - **请求参数约定**：
   - GET 请求可用 `@RequestParam`、`@PathVariable` 传参；
   - **POST / PUT / DELETE / PATCH 等非 GET 请求一律使用 `@RequestBody` 传参**，禁止 `@RequestParam`、`@PathVariable`、URL 查询参数或路径参数。
@@ -61,6 +61,68 @@ $MODULE_ROOT/src/main/java/com/lm/app/
   - Controller 方法签名：`delete(@Valid @RequestBody AdminDeleteReqVO reqVO)`，通过 `reqVO.getId()` 取值。
   - 生成业务代码前，**先确认 `AdminDeleteReqVO` 是否已存在**；若项目尚无该类，必须先按 [code-template.md](references/code-template.md)「AdminDeleteReqVO 模板」新增该类，再继续生成业务代码。
 - GET 查询/分页仍按框架规范使用 `@RequestParam` 或 `@Valid PageReqVO`，不受上述非 GET 规则约束。
+
+### 日志规范
+
+> 标准 CRUD（增删改查）通常无需业务日志；涉及第三方调用、定时任务、复杂业务流程、关键状态变更等需要留痕的场景才打日志。一旦打日志，必须遵循以下约定。
+
+- **Logger 声明**：统一使用 Lombok `@Slf4j` 注解，日志字段名固定为 `log`，**不要**手写 `LoggerFactory.getLogger(...)`。
+
+```java
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Service
+public class XxxServiceImpl implements XxxService { ... }
+```
+
+- **结构化日志公式（核心，必须严格套用）**：
+
+```
+log.级别("[线程id] [操作人] [业务模块] [业务动作], key1={}, key2={}", 值1, 值2[, 异常对象]);
+```
+
+| 字段 | 含义（追溯来源） | 取值方式 | 示例 |
+|------|------------------|----------|------|
+| `[线程id]` | 当前线程，并发/异步追溯 | `Thread.currentThread().threadId()` | `42` |
+| `[操作人]` | 当前登录用户，行为追溯 | 框架登录上下文（如 `SecurityFrameworkUtils.getLoginUserId()`） | `1024` |
+| `[业务模块]` | 所属模块 | 静态文本 | `检测任务` |
+| `[业务动作]` | 具体操作 | 静态文本 | `创建检测任务` |
+| `key={}` | key=value 关键上下文 | `{}` 占位符 | `taskId={}` |
+| 末位异常 | 异常对象作为最后一个参数（可选） | 直接传 `e` | `, e` |
+
+```java
+// ✅ 正确：四字段前缀 + 唯一 ID + 异常末位
+log.info("[{}] [{}] [检测任务] [创建检测任务], taskId={}, taskName={}",
+         Thread.currentThread().threadId(), SecurityFrameworkUtils.getLoginUserId(), id, name);
+log.error("[{}] [{}] [检测任务] [执行失败], taskId={}",
+          Thread.currentThread().threadId(), SecurityFrameworkUtils.getLoginUserId(), id, e);
+
+// ❌ 错误：自然语言长句（无法检索、无法追溯来源）
+log.info("检测任务创建成功，任务名称是xxx，请注意查看");
+// ❌ 错误：字符串拼接
+log.info("创建任务 id=" + id);
+// ❌ 错误：打印完整大对象（日志爆炸、无法检索）
+log.info("[{}] [{}] [检测任务] [同步完成], task={}",
+         Thread.currentThread().threadId(), SecurityFrameworkUtils.getLoginUserId(), taskDO);
+// ✅ 正确：只打标识符
+log.info("[{}] [{}] [检测任务] [同步完成], taskId={}",
+         Thread.currentThread().threadId(), SecurityFrameworkUtils.getLoginUserId(), taskDO.getId());
+```
+
+> **为什么这么严格**：`[线程id]` + `[操作人]` + `[业务模块]` + `[业务动作]` + 唯一 ID 五要素齐全，开发者能在海量日志里 **grep 精准追溯**到任意一次操作的完整链路——谁、在哪个线程、哪个模块、做了什么、操作的是哪条记录；key=value 便于日志平台按字段检索；禁止大对象避免日志爆炸。
+
+- **硬性规则**：
+  - **必须带四要素前缀** `[线程id] [操作人] [业务模块] [业务动作]`，确保每条日志可追溯来源。
+  - **必须用 `{}` 占位符**，禁止任何字符串拼接（`+`）。
+  - **必须包含唯一标识符（ID）**，让每条日志可追溯到具体记录。
+  - **禁止自然语言长句**，一律写成结构化格式。
+  - **禁止打印完整大对象**（DO/VO/List/Map），只打关键 ID 或摘要字段。
+  - **异常对象放最后一个参数**，不要拼进消息、不要只打 `e.getMessage()`（会丢堆栈）。
+  - **昂贵操作用 `isXxxEnabled()` 守卫**：`if (log.isDebugEnabled()) { ... }`。
+  - **日志级别**：`ERROR` 系统故障/第三方失败、`WARN` 可恢复异常/降级、`INFO` 关键业务事件、`DEBUG/TRACE` 诊断细节（生产默认关闭）。
+  - **禁止记录敏感数据**：密码、token、身份证、手机号、银行卡、完整请求/响应体；确需记录时脱敏。
+  - **循环/高频路径**：不打 `INFO` 及以上，用 `DEBUG` + `isDebugEnabled()` 守卫。
 
 ## 前置条件：DO/Mapper 由开发者自行维护
 

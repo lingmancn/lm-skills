@@ -24,7 +24,7 @@
 - MapStruct 转换器（非 BeanUtils）
 - `@Resource` 注入（非 `@Autowired`）
 - RESTful HTTP 方法（POST/PUT/DELETE/GET）
-- URL 前缀：`/app/{biz}`（kebab-case，如 `/app/detection-task`）
+- URL 前缀：`/admin/{biz}`（kebab-case，如 `/admin/detection-task`）
 - ID 策略：PostgreSQL 序列（`@KeySequence`）/ 自增 / 雪花算法（按场景选择）
 
 ## 安装方式

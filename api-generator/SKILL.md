@@ -22,14 +22,14 @@ description: Lingman-Starter 框架接口设计生成助手。当用户需要：
 
 ### 管理端接口
 ```
-/app/{biz}/{action}
+/admin/{biz}/{action}
 
 示例：
-POST   /app/announcement/create    # 创建公告
-POST   /app/announcement/update    # 更新公告
-GET    /app/announcement/delete    # 删除公告
-GET    /app/announcement/get       # 查询详情
-POST   /app/announcement/page      # 分页查询
+POST   /admin/announcement/create    # 创建公告
+POST   /admin/announcement/update    # 更新公告
+GET    /admin/announcement/delete    # 删除公告
+GET    /admin/announcement/get       # 查询详情
+POST   /admin/announcement/page      # 分页查询
 ```
 
 ### 用户端（小程序/App）接口
@@ -108,7 +108,7 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 ## 公告管理接口
 
 ### 1. 创建公告
-- **URL**: POST /app/announcement/create
+- **URL**: POST /admin/announcement/create
 - **权限**: app:announcement:create
 - **请求**: AnnouncementCreateReqVO
   - title (string, required): 公告标题
@@ -117,7 +117,7 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 - **响应**: CommonResult<Long> (公告ID)
 
 ### 2. 更新公告
-- **URL**: POST /app/announcement/update
+- **URL**: POST /admin/announcement/update
 - **权限**: app:announcement:update
 - **请求**: AnnouncementUpdateReqVO
   - id (long, required): 公告编号
@@ -128,19 +128,19 @@ public CommonResult<PageResult<AnnouncementRespVO>> page(@RequestBody Announceme
 - **响应**: CommonResult<Boolean>
 
 ### 3. 删除公告
-- **URL**: GET /app/announcement/delete
+- **URL**: GET /admin/announcement/delete
 - **权限**: app:announcement:delete
 - **请求**: id (long, query)
 - **响应**: CommonResult<Boolean>
 
 ### 4. 查询详情
-- **URL**: GET /app/announcement/get
+- **URL**: GET /admin/announcement/get
 - **权限**: app:announcement:query
 - **请求**: id (long, query)
 - **响应**: CommonResult<AnnouncementRespVO>
 
 ### 5. 分页查询
-- **URL**: POST /app/announcement/page
+- **URL**: POST /admin/announcement/page
 - **权限**: app:announcement:query
 - **请求**: AnnouncementPageReqVO
   - pageNo (int): 页码

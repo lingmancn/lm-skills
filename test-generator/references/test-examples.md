@@ -50,7 +50,7 @@ class DetectionTaskControllerTest {
         reqVO.setTaskName("火焰检测");
         reqVO.setModelId(1L);
 
-        mockMvc.perform(post("/app/detection-task/create")
+        mockMvc.perform(post("/admin/detection-task/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(reqVO)))
             .andExpect(status().isOk())
@@ -67,7 +67,7 @@ class DetectionTaskControllerTest {
             .build();
         detectionTaskMapper.insert(task);
 
-        mockMvc.perform(get("/app/detection-task/get")
+        mockMvc.perform(get("/admin/detection-task/get")
                 .param("id", String.valueOf(task.getId())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
@@ -88,7 +88,7 @@ class DetectionTaskControllerTest {
         reqVO.setTaskName("新名称");
         reqVO.setModelId(1L);
 
-        mockMvc.perform(put("/app/detection-task/update")
+        mockMvc.perform(put("/admin/detection-task/update")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(reqVO)))
             .andExpect(status().isOk())
@@ -107,7 +107,7 @@ class DetectionTaskControllerTest {
             .build();
         detectionTaskMapper.insert(task);
 
-        mockMvc.perform(delete("/app/detection-task/delete")
+        mockMvc.perform(delete("/admin/detection-task/delete")
                 .param("id", String.valueOf(task.getId())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0));
@@ -117,7 +117,7 @@ class DetectionTaskControllerTest {
 
     @Test
     void page_shouldReturnPageResult() throws Exception {
-        mockMvc.perform(get("/app/detection-task/page"))
+        mockMvc.perform(get("/admin/detection-task/page"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
             .andExpect(jsonPath("$.data.list").isArray());

@@ -36,7 +36,7 @@ VALUES
 ```java
 @Tag(name = "管理后台 - 公告管理")
 @RestController
-@RequestMapping("/app/announcement")
+@RequestMapping("/admin/announcement")
 @Validated
 public class AnnouncementAdminController {
 
