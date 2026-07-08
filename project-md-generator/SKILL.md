@@ -5,7 +5,7 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 
 # 项目 AI 记忆 md 文件生成与规范化指南
 
-## 这个 Skill 做什么
+## 这个 Skill 做什么1
 
 为 AI 编程 IDE（Claude Code / Codex / Cursor / Gemini 等）生成或规范化项目的"记忆 md 文件"——也就是 `CLAUDE.md`、`AGENTS.md` 这类让 AI 在每次会话开头自动读取、用来理解项目约定与上下文的文件。
 
