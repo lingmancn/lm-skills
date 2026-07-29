@@ -39,7 +39,7 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 >   - UUID/随机字符串是否优先使用 `generateUUID()` / `generateRandomStr()`，避免自己写生成逻辑
 >   - 树形操作是否优先使用 `eachTree` / `findNode` / `treeToList`，避免自己写树遍历
 >   - Token 操作是否优先使用 `getAccessToken()` / `setToken()`，避免自己写 Token 读写
-> - 样式规范：是否优先使用 UnoCSS 原子类，组件样式是否加 `scoped`
+> - 样式规范：是否优先使用 UnoCSS 原子类，组件样式是否加 `scoped`；数值表示间距、尺寸、宽高、`gap`、定位或平移偏移时是否显式带 CSS 单位，语义关键字、命名令牌、比例/分数等排除项按 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)「11.1 优先使用 UnoCSS 原子类」执行
 > - 权限控制：按钮是否使用 `v-hasPermi`，JS 逻辑中是否使用 `checkPermi`
 
 ## 审查清单

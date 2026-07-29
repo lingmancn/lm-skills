@@ -292,7 +292,8 @@ lm api
 4. **搜索区与表格区必须分别包裹在 `<ContentWrap>` 中**。
 5. **表单弹窗（新增/编辑）必须使用 `<Dialog>` + `<Form>` 组件**，禁止直接使用 `<el-dialog>` / `<el-form>`。
 6. **优先使用 `@lingman/yd` 提供的组件、Hooks 和工具函数**，已有能力禁止重复封装。
-7. **API 文件优先引用 `src/api/auto/` 下的自动生成对象**（`import { ApiAppXxxAppAdminApiAuto }`）；仅当需要手写扩展时才使用 `src/api/` 下的自定义路径。
+7. **生成的数值尺寸型 UnoCSS 类必须显式带 CSS 单位**，禁止 `p-4` 等无单位写法；语义关键字、命名令牌、比例/分数等排除项按 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)「11.1 优先使用 UnoCSS 原子类」执行。
+8. **API 文件优先引用 `src/api/auto/` 下的自动生成对象**（`import { ApiAppXxxAppAdminApiAuto }`）；仅当需要手写扩展时才使用 `src/api/` 下的自定义路径。
 
 ### 生成顺序
 

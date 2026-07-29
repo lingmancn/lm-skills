@@ -744,10 +744,14 @@ const userStore = useUserStoreWithOut()
 
 ### 11.1 优先使用 UnoCSS 原子类
 
+**数值尺寸类强制规则**：本规则适用于所有新增、修改和生成的前端代码。凡数值表示间距、尺寸、宽高、`gap`、定位偏移或平移偏移的 UnoCSS 工具类，必须显式声明 CSS 单位，包括数值为 `0` 的情况。正确示例：`p-4px`、`mt-8px`、`gap-12px`、`w-240px`、`h-32px`、`top-0px`、`-left-8px`、`translate-x-4px`、`m-0px`；禁止对应的无单位写法：`p-4`、`mt-8`、`gap-12`、`w-240`、`h-32`、`top-0`、`-left-8`、`translate-x-4`、`m-0`。
+
+此规则不适用于语义关键字、命名令牌、比例/分数、百分比、任意 CSS 值及非尺寸数值类，例如 `w-full`、`h-screen`、`m-auto`、`h-1/1`、`w-50%`、`w-[var(--panel-width)]`、`opacity-50`、`z-10`、`font-500`、`grid-cols-3`、`flex-1` 均为有效写法。
+
 ```vue
 <!-- ✅ 优先使用原子类 -->
 <div class="flex items-center justify-center">
-<div class="flex items-center justify-between mb-4">
+<div class="flex items-center justify-between mb-4px">
 <el-input class="!w-240px" />
 
 <!-- ❌ 避免写内联 style -->
@@ -761,8 +765,8 @@ flex               → display: flex
 items-center       → align-items: center
 justify-center     → justify-content: center
 justify-between    → justify-content: space-between
-mb-4 / mt-4        → margin-bottom/top: 1rem
-p-4                → padding: 1rem
+mb-4px / mt-4px    → margin-bottom/top: 4px
+p-4px              → padding: 4px
 w-full             → width: 100%
 h-1/1              → height: 100%
 !w-240px           → width: 240px（!important）
