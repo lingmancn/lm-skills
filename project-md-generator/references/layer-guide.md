@@ -35,7 +35,9 @@ src/main/java/com/lm/app/
 - `src/main/java/com/lm/app/controller/AGENTS.md`
 - `D:\project\lmProject\p706\p706-api\src\main\java\com\lm\app\service\AGENTS.md`
 
-### 前端 Vue
+### 前端 Vue / uni-app
+
+纯 Web Vue 可按 `views/components/api/store/utils` 放置；发现 uni-app 信号时必须 **APP 优先**，先围绕 `manifest.json`、`pages.json`、APP 入口、原生能力与条件编译组织分层说明，不要默认按浏览器项目处理。
 
 ```
 src/
@@ -51,7 +53,42 @@ src/
     └── AGENTS.md            ← 工具函数约定
 ```
 
-> 不是每个目录都要放。只在该层"有足够多 AI 必须知道的约定/坑"时才放一个；一个只有两三个文件的目录不需要单独的 md。
+uni-app 可按真实目录补充：
+
+```text
+src/  (或项目根目录，按实际结构)
+├── pages/
+│   └── AGENTS.md            ← APP 页面生命周期、导航、平台差异与条件编译
+├── subPackages/             ← 仅真实存在时；可在约定密集的业务分包内放同名 md
+├── components/
+│   └── AGENTS.md            ← uni-app 组件兼容性、easycom/第三方组件约定
+├── api/
+│   └── AGENTS.md            ← 请求封装、鉴权、环境基址；只写变量名，不写 token/密钥值
+├── store/
+│   └── AGENTS.md            ← 跨页面状态与持久化约定
+├── uni_modules/
+│   └── AGENTS.md            ← 插件来源、可修改边界、APP 原生依赖
+└── nativeplugins/  (或其他原生插件目录)
+    └── AGENTS.md            ← Android/iOS 配置、权限、签名与打包注意事项
+```
+
+APP、小程序、H5 有差异时，在最近的分层 md 中明确“适用端、条件编译入口、不可共用能力”；APP 规则优先写，其他端仅补充差异。签名证书、AppSecret、推送密钥等只写文件路径或变量名，绝不写真实值。
+
+### monorepo
+
+```text
+repo/
+├── AGENTS.md                ← workspace、统一包管理器、跨项目命令与全仓约束
+├── apps/
+│   ├── admin/AGENTS.md      ← 该应用入口、命令作用域、端特有规则
+│   └── app/AGENTS.md        ← uni-app/APP 规则与运行发行方式
+└── packages/
+    └── shared/AGENTS.md     ← 公共包 API、构建和兼容边界
+```
+
+根 md 不展开每个应用细节；应用/包分层 md 必须注明命令从仓库根还是当前目录执行。若出现多个锁文件，先依据 `packageManager`、workspace、CI 判断主包管理器；不能唯一判断时只记录冲突并询问用户，不执行安装、不删除锁文件。
+
+> 不是每个目录都要放。只在该层“有足够多 AI 必须知道的约定/坑”时才放一个；一个只有两三个文件的目录不需要单独的 md。
 
 ## 分层 md 结构（自由，不套根模板）
 
@@ -83,6 +120,13 @@ src/
 - **同一条规则不要在根 md 和分层 md 里都展开**——根 md 放一句话 + 指向分层 md 的链接即可。
 
 举例：日志结构化公式是公司全局规则，放根 md 的 `## 开发约束`；但"service 层里哪些方法需要打日志、打日志时业务模块名怎么取"这种层内细节，放 service 层的 `AGENTS.md`。
+
+## 命令与敏感配置的层内记录
+
+- 命令必须写明执行目录，并标注验证等级：L1 配置核对、L2 不启动服务的静态验证、L3 完整构建/测试/lint。
+- `dev`、`serve`、`start`、APP 调试基座、模拟器/真机运行等启动类命令，未经用户明确同意不得执行；可记录为“L1/L2，未启动验证”。
+- 不为验证执行依赖安装或改写锁文件；多锁文件冲突未确认前尤其禁止。
+- `.env*`、平台配置、签名证书与密钥仅记录文件位置、变量名、用途和获取渠道；禁止复制密码、token、AppSecret、私钥或证书口令。
 
 ## 行数控制
 

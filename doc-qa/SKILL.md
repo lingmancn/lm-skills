@@ -1,6 +1,6 @@
 ---
 name: doc-qa
-description: Lingman-Starter 框架文档问答助手。当用户需要：(1) 查询某个 API 接口的用法和参数 (2) 了解框架某个功能的导入和使用方式 (3) 查询框架配置项的含义 (4) 询问开发规范相关问题 时触发此技能。(5) 查看框架底层代码 不要在以下场景触发：生成代码（由 crud-generator 处理）、生成 SQL（由 sql-generator 处理）、涉及具体业务逻辑实现的问题。注意:所有项目都采用共同的框架---基于芋道源码二次开发而来的框架!
+description: Lingman-Starter 多端框架文档问答助手。当用户需要：(1) 查询 API 接口的用法和参数 (2) 了解框架功能的导入和使用方式 (3) 查询框架或 uni-app 配置项的含义 (4) 询问后端、管理后台 Web、uni-app 开发规范 (5) 查看框架底层代码或理解 p708 已验证工程模式 时触发。只回答规范、配置、机制和原因；生成代码转对应生成 Skill，uni-app 页面/组件实现转 uni-app-feature，启动/环境/代理/401/编译构建排障转 uni-app-tooling。
 ---
 
 # 文档问答指南
@@ -10,7 +10,23 @@ description: Lingman-Starter 框架文档问答助手。当用户需要：(1) �
 本 Skill 基于以下内容回答问题：
 - `lingman-core/api-docs/` 下的 API 文档
 - `lm` CLI 工具的安装、配置与使用
-- 框架规范与配置说明
+- 后端框架和管理后台 Web 规范
+- [uni-app-spec.md](../lingman-core/uni-app/uni-app-spec.md)：uni-app 通用页面、状态、样式、跨端和资源生命周期规范
+- [tooling-guide.md](../lingman-core/uni-app/tooling-guide.md)：环境、代理、请求认证、配置生成和构建排障方法
+- [p708-verified-patterns.md](../lingman-core/uni-app/p708-verified-patterns.md)：p708 已验证模式索引；回答前仍需以目标项目当前文件为准
+
+## 问答与实施分流
+
+| 用户目标 | 处理方式 |
+|---|---|
+| 查询规范、配置含义、机制、为什么这样设计 | 本 Skill 回答并引用来源 |
+| 查询 p708 页面生成、请求桥接、TabBar、主题或视频模式 | 先基于已验证模式回答；涉及当前值时读取目标项目源文件 |
+| 新建/修改 uni-app 页面、组件、Pinia、样式或视频业务 | 转 `uni-app-feature` |
+| 启动、env、代理、localhost、401、`lm api`、编译或构建排障 | 转 `uni-app-tooling` |
+| 后端或管理后台 CRUD 代码生成 | 转 `crud-generator` |
+| 纯代码审查 | 转 `code-reviewer` |
+
+纯问答不得顺带启动项目、修改业务代码或把文档中的示例当作当前项目事实。若问题依赖版本、script、环境地址、页面/API 清单或生成配置，先读取当前项目；不得引用或回显密钥、Token、AppID、证书和签名。
 
 ## 回答原则
 
@@ -84,4 +100,8 @@ lm mapper -n   # 强制重新生成
 | 所有 API 文档 | [lingman-core/api-docs/](../lingman-core/api-docs/) |
 | API 索引 | [api-index.md](references/api-index.md) |
 | 框架规范 | [framework.md](../lingman-core/framework.md) |
+| 管理后台 Web 规范 | [frontend-spec.md](../lingman-core/frontend/frontend-spec.md) |
+| uni-app 通用规范 | [uni-app-spec.md](../lingman-core/uni-app/uni-app-spec.md) |
+| uni-app 工具链指南 | [tooling-guide.md](../lingman-core/uni-app/tooling-guide.md) |
+| p708 已验证模式 | [p708-verified-patterns.md](../lingman-core/uni-app/p708-verified-patterns.md) |
 | CLI 工具安装与配置 | [README.md](../README.md) |

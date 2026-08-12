@@ -1,9 +1,22 @@
 ---
 name: code-reviewer
-description: Lingman-Starter 框架代码审查助手。当用户需要：(1) 检查代码是否符合公司框架规范 (2) 审查 CRUD 代码的分层和命名 (3) 检查权限注解、异常处理、事务配置 (4) 发现潜在的空指针、SQL 注入、越权访问风险 (5) 评审接口设计的合理性 时触发此技能。不要在以下场景触发：生成代码（由 crud-generator 处理）、生成 SQL（由 sql-generator 处理）、错误排查（由 error-analyzer 处理）。
+description: Lingman-Starter 多端代码审查助手。当用户需要：(1) 检查后端或前端代码是否符合公司规范 (2) 审查 CRUD 分层、命名、权限、异常与事务 (3) 审查管理后台 Web 页面 (4) 审查 uni-app 页面、组件、API 接入、Pinia、跨端兼容和资源生命周期 (5) 发现空指针、SQL 注入、越权和敏感信息风险 时触发。审查前必须先识别项目类型并加载对应规范。不要在以下场景触发：生成代码、生成 SQL、单纯运行时错误排查。
 ---
 
 # 代码审查指南
+
+## 审查入口与项目分流
+
+审查前先识别目标，不能看到 `.vue` 就默认按管理后台审查：
+
+| 类型 | 主要证据 | 使用规范 |
+|---|---|---|
+| Java 后端 | `pom.xml`、Spring/MyBatis、`src/main/java` | [framework.md](../lingman-core/framework.md) |
+| 管理后台 Web | `src/views`、Element Plus、`@lingman/yd` | [frontend-spec.md](../lingman-core/frontend/frontend-spec.md) |
+| uni-app | `@dcloudio/*`、pages/manifest、`uni.scss`、小程序/APP | [uni-app-spec.md](../lingman-core/uni-app/uni-app-spec.md) |
+| p708 或相似项目 | uni-app 且命中对应请求、TabBar、视频架构 | [p708-verified-patterns.md](../lingman-core/uni-app/p708-verified-patterns.md) |
+
+混合仓库按变更文件路径分别审查，禁止共用错误模板。完整检查项见 [review-checklist.md](references/review-checklist.md)。
 
 ## 审查维度
 
@@ -21,7 +34,7 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 | **VO 隔离** | Controller 是否直接返回 DO | 高 |
 | **日志规范** | 是否用 `@Slf4j`、套用 `[线程id][操作人][模块][动作] key={}` 公式、含唯一 ID、异常末位、未打大对象、未拼字符串、未泄露敏感数据 | 中 |
 
-> **前端审查维度**：详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)
+> **管理后台 Web 审查维度**：仅在项目类型确认后使用，详见 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)
 > - API 层：是否从 `api/auto/` 导入自动生成的 API 对象（`import { ApiAppXxxAppAdminApiAuto }`），禁止直接手写 URL
 > - **API 自动生成文件保护**：`src/api/auto/` 下的文件是否为命令自动生成，是否存在手动修改的痕迹（如手动增删接口、调整参数类型等）
 > - 列表页：是否使用 `useTable` hook 管理列表状态，而非手动维护 `loading`/`total`/`list`
@@ -41,6 +54,14 @@ description: Lingman-Starter 框架代码审查助手。当用户需要：(1) �
 >   - Token 操作是否优先使用 `getAccessToken()` / `setToken()`，避免自己写 Token 读写
 > - 样式规范：是否优先使用 UnoCSS 原子类，组件样式是否加 `scoped`；数值表示间距、尺寸、宽高、`gap`、定位或平移偏移时是否显式带 CSS 单位，语义关键字、命名令牌、比例/分数等排除项按 [frontend-spec.md](../lingman-core/frontend/frontend-spec.md)「11.1 优先使用 UnoCSS 原子类」执行
 > - 权限控制：按钮是否使用 `v-hasPermi`，JS 逻辑中是否使用 `checkPermi`
+>
+> **uni-app 审查维度**：仅在确认是 uni-app 后使用，详见 [uni-app-spec.md](../lingman-core/uni-app/uni-app-spec.md) 和 [review-checklist.md](references/review-checklist.md)
+> - 自动生成目录与 pages/manifest 配置源是否正确，未手改受保护文件
+> - TabBar 导航、页面生命周期、Pinia 状态和请求桥接是否复用项目能力
+> - APP/H5/小程序条件编译是否隔离，浏览器/平台 API 未越界
+> - Wot/项目 UI 库、UnoCSS/rpx、主题变量、安全区和动态图标 safelist 是否正确
+> - 视频、WebRTC、MediaStream、定时器和监听器是否在隐藏/卸载时释放
+> - APP 优先任务是否只验证了 H5，未验证项是否如实说明
 
 ## 审查清单
 
@@ -244,5 +265,8 @@ public class XxxServiceImpl implements XxxService {
 | 场景 | 参考文档 |
 |------|----------|
 | 审查检查项清单 | [review-checklist.md](references/review-checklist.md) |
-| 框架规范 | [framework.md](../lingman-core/framework.md) |
+| 后端框架规范 | [framework.md](../lingman-core/framework.md) |
+| 管理后台 Web 规范 | [frontend-spec.md](../lingman-core/frontend/frontend-spec.md) |
+| uni-app 通用规范 | [uni-app-spec.md](../lingman-core/uni-app/uni-app-spec.md) |
+| p708 已验证模式 | [p708-verified-patterns.md](../lingman-core/uni-app/p708-verified-patterns.md) |
 | 代码模板 | [code-template.md](../crud-generator/references/code-template.md) |

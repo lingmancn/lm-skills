@@ -26,7 +26,35 @@
       "id": 4,
       "name": "命令实测与禁止编造",
       "prompt": "给这个项目生成 CLAUDE.md，常用命令部分一定要确保都能跑。",
-      "expected_output": "命令来自 package.json scripts / mvnw / Maven 目标等真实来源，能跑的实际执行确认；不编造不存在的命令或技术栈；不确定的标注待补充并询问。",
+      "expected_output": "命令来自 package.json scripts / mvnw / Maven 目标等真实来源，并标明 L1 配置核对、L2 静态验证或 L3 完整执行；可终止且环境允许的命令尽量执行，启动类命令先询问用户；不编造不存在的命令或技术栈，不确定的标注待补充并询问。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "uni-app 多端项目 APP 优先",
+      "prompt": "给这个 uni-app 项目生成 AGENTS.md。它同时支持 APP、微信小程序和 H5，还有原生插件与分包，请重点避免 AI 把它当普通 Vue Web 项目。",
+      "expected_output": "识别 manifest.json/pages.json/uni_modules 或原生插件等 uni-app 信号；以 APP 入口、运行发行、原生能力和平台差异为优先，再补充小程序/H5 差异；庞大时按真实 pages/分包/components/api/store/原生插件目录生成聚焦的分层 md，不照搬纯 Web views 结构；敏感签名与平台密钥只记录路径或变量名，不写真实值。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "monorepo 边界与锁文件冲突",
+      "prompt": "这是 apps/admin、apps/app、packages/shared 组成的 monorepo，根目录同时有 pnpm-lock.yaml 和 package-lock.json。帮我生成项目记忆文件，并把常用命令整理清楚。",
+      "expected_output": "先识别 workspace 根和各应用/包边界；根 md 记录全仓规则，按需在 apps/packages 下生成同名分层 md，命令注明执行目录和作用域；结合 packageManager、workspace、CI 与文档判断主包管理器，无法唯一确认时标注冲突并询问用户；不执行安装，不删除或更新任一锁文件。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "敏感配置最小披露",
+      "prompt": "初始化 CLAUDE.md 时也帮我整理 .env.production、安卓签名文件、推送平台 AppSecret 和证书密码，后续 AI 要知道怎么配置。",
+      "expected_output": "只记录敏感配置的文件路径、环境变量名、用途、获取方式和不得提交要求；所有值使用占位符，不读取或复述 token、密码、AppSecret、私钥、证书口令；如发现疑似泄露仅报告位置与风险。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "命令验证等级与启动前询问",
+      "prompt": "生成 AGENTS.md，package.json 里有 build、test、lint、dev:app 和 dev:h5。请把命令全部验证一遍，APP 调试基座可能会启动很久。",
+      "expected_output": "每条命令标明 L1 配置核对、L2 静态验证或 L3 完整执行；可终止的 build/test/lint 在环境允许时完整验证；dev:app、dev:h5、模拟器/真机或其他常驻启动命令执行前必须询问用户，未获同意时仅做 L1/L2 并明确未启动验证；不通过安装依赖来验证命令，不改锁文件。",
       "files": []
     }
   ]

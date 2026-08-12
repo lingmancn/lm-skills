@@ -1,9 +1,22 @@
 ---
 name: crud-generator
-description: Lingman-Starter 框架 CRUD 代码生成助手。当用户需要：(1) 生成业务模块的 CRUD 代码（Controller/Service/VO/Mapper）(2) 基于已有数据库表/DO 生成增删改查代码骨架 (3) 新建业务模块 (4) 生成完整的业务代码模板 时触发此技能。不要在以下场景触发：生成 DO/Mapper（由开发者自行创建维护）、纯文档查询（由 doc-qa 处理）、SQL 语句生成（由 sql-generator 处理）。
+description: Lingman-Starter 后端与管理后台 Web CRUD 代码生成助手。当用户需要：(1) 生成后端业务模块的 Controller/Service/VO/Convert (2) 基于已有数据库表/DO 生成增删改查骨架 (3) 新建后端业务模块 (4) 生成 Lingman 管理后台 Vue CRUD 页面 时触发。不要在以下场景触发：生成 DO/Mapper（由开发者自行创建维护）、SQL（sql-generator）、纯文档查询（doc-qa）、uni-app 页面/组件/Pinia/跨端业务功能（uni-app-feature）、uni-app 启动/环境/编译/构建排障（uni-app-tooling）。
 ---
 
 # CRUD 代码生成指南
+
+## 场景分流（必须先执行）
+
+生成前先根据项目证据判断目标端，不能仅凭存在 `.vue` 文件就套用管理后台模板：
+
+| 目标 | 主要证据 | 处理方式 |
+|---|---|---|
+| Spring Boot 后端 | `pom.xml`、`src/main/java`、Controller/Service/VO | 本 Skill 处理 |
+| Lingman 管理后台 Web | `src/views`、Element Plus、`@lingman/yd`、管理后台前端规范 | 本 Skill 处理 |
+| uni-app 业务功能 | `@dcloudio/*`、pages/manifest、`uni.scss`、小程序/APP 需求 | 转 `uni-app-feature` |
+| uni-app 工具链 | dev/build、env、代理、条件编译、pages/manifest 生成、平台排障 | 转 `uni-app-tooling` |
+
+同一需求同时包含后端 CRUD 与 uni-app 页面时拆成两个子任务：本 Skill 只处理后端，移动端在自动 API 同步后由 `uni-app-feature` 接入。未完成项目类型判断前，禁止套用 `<Table>`、`<Search>`、`<Dialog>`、Element Plus 或 `@lingman/yd`。
 
 ## 生成范围
 
@@ -280,9 +293,11 @@ lm api
 | 真实代码示例 | [crud-examples.md](references/crud-examples.md) |
 | 各层代码模板 | [code-template.md](references/code-template.md) |
 
-## 前端对接
+## 管理后台 Web 对接
 
-生成前端页面（index.vue、XxxForm.vue）时，必须严格遵守 `lingman-core/frontend/frontend-spec.md` 的完整规范。下方仅列出对生成代码骨架有强制影响的硬性约束；完整模板、Schema 示例、组件清单、字典/消息/工具函数使用规范等均以前端规范为准。
+> 本节仅适用于 Lingman 管理后台 Vue 工程，不适用于 uni-app、小程序、APP 或移动 H5 工程。检测到 `@dcloudio/*`、pages/manifest、`uni.scss`，或用户明确要求 uni-app 时，立即停止套用本节规则并按「场景分流」处理。
+
+生成管理后台页面（index.vue、XxxForm.vue）时，必须严格遵守 `lingman-core/frontend/frontend-spec.md` 的完整规范。下方仅列出对生成代码骨架有强制影响的硬性约束；完整模板、Schema 示例、组件清单、字典/消息/工具函数使用规范等均以前端规范为准。
 
 ### 骨架级强制规则
 

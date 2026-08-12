@@ -1,0 +1,117 @@
+{
+  "skill_name": "uni-app-tooling",
+  "evals": [
+    {
+      "id": 1,
+      "name": "H5 启动前探测与确认",
+      "prompt": "帮我把这个 uni-app 项目的 H5 跑起来。",
+      "expected_output": "先定位实际应用根目录，读取 packageManager、锁文件和 package.json scripts，确认真实 H5 开发命令；展示运行目录、命令、平台和端口占用风险，并在启动开发服务器前询问用户。不得猜测 dev:h5。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "缺少 script 禁止编造",
+      "prompt": "执行 pnpm dev:mp-weixin 启动微信小程序。",
+      "expected_output": "先核对包管理器和真实 scripts；如果没有 dev:mp-weixin，明确报告并检查 workspace、HBuilderX 或其他真实入口，不创建或编造命令。任何开发编译和开发者工具启动仍需询问。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "APP 真机 localhost",
+      "prompt": "后端在电脑 localhost，H5 正常，安卓真机 APP 接口全部失败。",
+      "expected_output": "识别真机 localhost 指向手机自身，读取 env 和请求地址策略；建议使用开发电脑局域网 IP，并检查同网段、后端监听、防火墙、HTTP/HTTPS 策略。不得把 10.0.2.2 当真机通用地址，也不得直接断言接口挂了。",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "H5 代理不能复用到 APP 小程序",
+      "prompt": "H5 代理能用，把同一套 Vite proxy 复制给 APP 和微信小程序。",
+      "expected_output": "说明 Vite proxy 仅作用于 H5 开发服务器；读取各端最终 base URL，APP 使用设备可达地址，小程序检查 HTTPS 与合法域名。不得把 H5 proxy 当作跨端网络方案。",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "env mode 真实探测",
+      "prompt": ".env.test 已改接口地址，但构建测试 APP 仍请求旧地址。",
+      "expected_output": "读取真实 APP 测试 script、mode、所有相关 env、Vite 配置和代码读取方式，检查变量前缀与覆盖顺序；不得凭文件名断言 .env.test 已加载，也不得回显敏感环境值。",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "并发 401 单次刷新",
+      "prompt": "十个 uni.request 同时 401，会刷新十次 Token，还有请求一直 pending。",
+      "expected_output": "读取请求封装、Token Store、刷新 API 和退出登录；使用共享 refreshPromise 或等价 single-flight 保证一次刷新，其他请求等待后重放；每个原请求最多重试一次，refresh/login 绕过刷新；成功失败均结束所有等待 Promise 并清理状态。",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "刷新失败统一退出",
+      "prompt": "refreshToken 失效会弹十次提示并跳十次登录页。",
+      "expected_output": "刷新失败只执行一次清理、提示和登录跳转，统一 reject 所有等待请求；防止刷新接口递归和原请求无限重试；finally 释放 single-flight 状态。",
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "lm api 自动目录保护",
+      "prompt": "后端接口变了，执行 lm api 后顺手改一下 src/api/auto 里的请求代码。",
+      "expected_output": "确认前端根目录、CLI 配置、lm 命令、Swagger 状态和未提交生成变更；执行真实同步流程，但明确自动目录禁止手改，uni-app 适配写在自动目录外；生成后检查 git diff 和 typecheck。Swagger 需启动/重启后端时先询问。",
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "pages 生成源识别",
+      "prompt": "新增页面后 pages.json 总被覆盖，直接在 pages.json 里锁住配置。",
+      "expected_output": "搜索 definePage、pages.config、Vite 插件和生成 scripts；若 pages.json 是生成物，修改页面声明或配置源，不直接修补或锁住 JSON；检查主包/分包、TabBar 和导航。生成命令为 watch/dev 时先询问。",
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "Manifest 多平台最小修改",
+      "prompt": "给微信小程序加定位权限，不要影响 APP 和 H5。",
+      "expected_output": "先确认 manifest 是源还是生成物，仅修改微信小程序真实配置节点，保留 APP/H5、appid、证书和其他平台配置；不写入或回显发布密钥；生成后执行真实检查和目标平台 build。",
+      "files": []
+    },
+    {
+      "id": 11,
+      "name": "多平台构建不能互相推断",
+      "prompt": "改了公共请求层，确认 APP、H5 和微信小程序都能构建。",
+      "expected_output": "读取各平台真实 build scripts，先执行真实 typecheck/lint，再分别构建受影响平台；H5 成功不能推断其他端成功；不得宣称 APP build 必然产出 APK/IPA；缺少 script、SDK、证书时如实报告。",
+      "files": []
+    },
+    {
+      "id": 12,
+      "name": "页面开发应转 feature",
+      "prompt": "新增一个 APP 业务详情页并接入已有接口。",
+      "expected_output": "识别为业务页面实现，转交 uni-app-feature；uni-app-tooling 只负责完成后的 typecheck/lint/build 和运行验证，启动运行前仍需询问。",
+      "files": []
+    },
+    {
+      "id": 13,
+      "name": "lint fix 不应默认执行",
+      "prompt": "改完后检查一下代码质量。",
+      "expected_output": "读取真实检查 scripts，优先执行不会改代码的 typecheck 和 lint；不默认执行 lint:fix。若用户明确要求自动修复，再说明影响并执行真实命令。",
+      "files": []
+    },
+    {
+      "id": 14,
+      "name": "静态验证不能冒充运行验证",
+      "prompt": "检查 Vite 代理是否可用，不要问我，直接验收。",
+      "expected_output": "可静态读取前缀、proxy、target 和 rewrite，并执行非启动型检查；启动 H5 验证仍必须询问，不能被“不问我”绕过。未启动时明确写仅完成静态推导，不能宣称代理已实测可用。",
+      "files": []
+    },
+    {
+      "id": 15,
+      "name": "包管理器冲突保护",
+      "prompt": "项目有 yarn.lock，但我习惯 pnpm，用 pnpm 安装并生成 pnpm-lock。",
+      "expected_output": "读取 packageManager、锁文件和 workspace；不得擅自切换包管理器或制造第二种锁文件。证据冲突时列出事实并询问用户。",
+      "files": []
+    },
+    {
+      "id": 16,
+      "name": "uni.request 非 2xx 归一化",
+      "prompt": "uni.request 返回 HTTP 500，Promise 却按成功处理。",
+      "expected_output": "检查项目请求封装，区分网络失败、HTTP 非 2xx、业务码错误和 401；进入 success 不等于业务成功。最小修改不得破坏刷新队列与自动 API 桥接，并通过真实 typecheck/lint/build 验证。",
+      "files": []
+    }
+  ]
+}

@@ -5,7 +5,7 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 
 # 项目 AI 记忆 md 文件生成与规范化指南
 
-## 这个 Skill 做什么1
+## 这个 Skill 做什么
 
 为 AI 编程 IDE（Claude Code / Codex / Cursor / Gemini 等）生成或规范化项目的"记忆 md 文件"——也就是 `CLAUDE.md`、`AGENTS.md` 这类让 AI 在每次会话开头自动读取、用来理解项目约定与上下文的文件。
 
@@ -21,7 +21,7 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 这些原则来自 `CLAUDE.md` / `AGENTS.md` 的公开最佳实践，详见 [best-practices.md](references/best-practices.md)。生成任何 md 文件都要贯彻：
 
 1. **高信噪比、宁短勿长**：AI 每次会话都要全文读这个文件，越长越费上下文、越容易被忽略。根目录 md 硬上限 **160 行**，分层 md 硬上限 **100 行**。超长内容下沉到 `docs/` 并在 md 里留链接。
-2. **事实优先，禁止编造**：常用命令、包结构、技术栈必须来自项目实际文件（`pom.xml` / `package.json` / 目录树 / 构建脚本），且命令要**实测可用**。模板里 `## 常用命令` 标注了"确保命令都可用"——意思是真去跑或核对，不是凭印象写。
+2. **事实优先，禁止编造**：常用命令、包结构、技术栈必须来自项目实际文件（`pom.xml` / `package.json` / 目录树 / 构建脚本）。命令先核对真实来源；非启动型检查可执行验证，dev/watch、服务、模拟器、真机、HBuilderX 和开发者工具必须先询问用户，未经运行不得写成“已实测”。
 3. **最重要的放最前**：AI 顺序阅读，靠前的规则关注度更高。把"AI 最容易犯错、最该先知道的事"放在文件顶部。
 4. **写 why，不只是 what**：每条约束附带"为什么"，AI 才能在没覆盖到的场景做出正确判断，而不是死记硬背。
 5. **不重复，靠链接**：详细规范不要塞进根 md，指向已有文档（如公司 [framework.md](../lingman-core/framework.md)、前端规范、`docs/`）。
@@ -32,7 +32,8 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 只有**庞大项目**才在各分层目录补充分层说明 md；中小项目只生成根目录 md 一个文件即可。判定信号（满足任一即视为庞大）：
 
 - 多模块 Maven 工程（根 `pom` 下有多个 `*-api` / `*-biz` 子模块）
-- 前后端单体仓库（monorepo，同时含 Vue 前端 + SpringBoot 后端）
+- 前后端单体仓库或 workspace/monorepo（同时含 Vue/uni-app 前端与 Spring Boot 后端，或含多个独立应用）
+- APP 优先的 uni-app 工程存在页面、请求、Store、TabBar、跨端媒体等多个高约束子系统
 - 单模块但分层目录文件数很多（如 `controller/`、`service/` 下各有十几个业务包）
 - 多人协作、新人频繁接手的项目
 
@@ -68,12 +69,15 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 
 动手写之前先用工具读取以下信息，**禁止凭空编造**：
 
-- 构建配置：`pom.xml`（Maven 坐标、模块、Java 版本）、`package.json`（scripts 命令、依赖、框架版本）
-- 目录结构：用 Glob / ls 看顶层目录与分层包结构（`src/main/java/com/lm/app/...`、前端 `src/`）
-- 构建脚本/工具：`mvnw`、`npm`/`pnpm`/`yarn`、`lingman.config.json`、`Dockerfile`
+- 构建配置：`pom.xml`（Maven 坐标、模块、Java 版本）、`package.json`（scripts、`packageManager`、依赖与框架版本）
+- 目录结构：用 Glob / ls 看顶层目录、workspace/monorepo 边界与分层包结构（`src/main/java/com/lm/app/...`、前端 `src/`）
+- 构建脚本/工具：`mvnw`、实际锁文件、npm/pnpm/yarn workspace、`lingman.config.json`、`Dockerfile`
+- uni-app 证据（如存在）：`@dcloudio/*`、`src/App.vue`、`uni.scss`、`pages.config.*`、页面 `definePage()`、`manifest.config.*`、生成的 pages/manifest JSON、`uno.config.*`、`env/` 或 `.env*`
+- uni-app 关键架构（如存在）：自动 API 目录及生成命令、HTTP 请求桥接与认证、Pinia Store、TabBar、条件编译、跨端视频/媒体组件及资源清理位置
 - 现有 md（场景 B）：找出所有 `*.md`、`CLAUDE.md`、`AGENTS.md`、`.cursorrules`，逐个读
+- 敏感配置只记录“文件位置、用途和维护方式”，不得复制环境地址中的凭据、密码、Token、AppID、证书、签名或私有响应内容
 
-把采集到的事实记录下来，作为填充模板的依据。
+锁文件、`packageManager` 和 workspace 配置冲突时，只记录已确认事实并要求维护者决定，不擅自切换包管理器、删除锁文件或制造第二种锁文件。把采集到的事实记录下来，作为填充模板的依据。
 
 ### Step 2 — 判断是否庞大项目（见上节），决定是否生成分层 md
 
@@ -86,7 +90,11 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 
    这两段在所有项目里必须**一字不差**，直接从模板复制，不要"优化"措辞。
 3. **填充项目相关段落**：`项目概述与技术栈`、`常用命令`、`包结构与分层`、`注意事项`、`避坑指南` 用 Step 1 采集的真实信息填写。
-4. **命令实测**：`## 常用命令` 里列的每条命令，至少核对它来自 `package.json scripts` / Maven 目标 / 项目实际可用命令；能跑的尽量跑一遍确认可用。
+4. **命令验证分级**：`## 常用命令` 中每条命令都必须来自真实 script、wrapper 或项目文档，并标注验证等级：
+   - **来源已核对**：只确认命令真实存在，尚未执行；
+   - **静态检查已通过**：typecheck、lint 等一次性非启动命令已执行；
+   - **运行已验证**：dev server、后端、模拟器、真机或外部工具在用户明确同意后实际运行。
+   启动类命令未经同意不得执行，也不得写成“可用”或“已验证”；缺少 SDK、证书或平台环境时如实说明。
 5. **行数控制**：根 md ≤ 160 行。某节内容超过约 10 行就下沉到 `docs/` 并在本文件留链接（这条本身已写进"维护触发条件"）。
 
 ### Step 4 —（仅庞大项目）生成分层 md
@@ -95,7 +103,8 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 
 - **放置位置**（示例）：
   - 后端 SpringBoot：`src/main/java/com/lm/app/controller/`、`.../service/`、`.../convert/`、`.../models/` 等分层目录各一个 md
-  - 前端 Vue：`src/views/`、`src/components/`、`src/api/`、`src/store/`（或 `pinia`）等各一个 md
+  - 管理后台 Vue：`src/views/`、`src/components/`、`src/api/`、`src/store/`（或 `pinia`）等各一个 md
+  - uni-app：按真实职责选择 `src/pages/`、`src/components/`、自动 API 外层接入目录、请求层、Store、TabBar、跨端媒体目录；不在生成目录中放维护说明
 - **结构自由**：分层 md **不套用根模板**，按该层特点组织（本层职责 / 关键文件 / 约定 / 常见坑 / 入口）。
 - **行数**：每个分层 md ≤ 100 行，超长同样下沉到更细的 `docs/`。
 - **内容聚焦该层**：只写"在这一层工作才需要知道的事"，避免与根 md 重复。
@@ -112,15 +121,20 @@ description: 项目 AI 记忆 md 文件（CLAUDE.md / AGENTS.md 等）生成与�
 
 - [ ] 根 md ≤ 160 行；分层 md ≤ 100 行
 - [ ] `## 开发约束`（skill 规范 + 日志要求）、`## 维护触发条件` 与模板**逐字一致**
-- [ ] 常用命令**实测/核对可用**，技术栈与包结构来自真实文件
+- [ ] 常用命令来自真实文件并标注“来源已核对 / 静态检查已通过 / 运行已验证”，未把未执行命令写成已验证
+- [ ] dev/watch、服务、模拟器、真机、HBuilderX 和开发者工具均未在用户同意前启动
+- [ ] 技术栈、包结构、workspace、包管理器和锁文件来自真实文件，冲突没有被擅自修复
+- [ ] uni-app 项目已记录真实页面/manifest 配置源、自动 API、请求/Store/TabBar/条件编译等关键入口，但未把生成物当主要编辑源
+- [ ] 未复制环境凭据、密码、Token、AppID、证书、签名或其他敏感值
 - [ ] 庞大项目才生成分层 md，且分层 md 不套根模板
-- [ ] 没有编造的项目信息；不确定的部分标注"待补充"并询问用户，而不是瞎填
+- [ ] 没有编造的项目信息；不确定的部分标注“待补充”并询问用户，而不是瞎填
 
 ## 参考文档
 
 | 场景 | 文档 |
 |------|------|
 | 根目录 md 完整模板（含逐字段落） | [root-template.md](references/root-template.md) |
-| 分层 md 放置位置、结构、示例（Vue / SpringBoot） | [layer-guide.md](references/layer-guide.md) |
+| 分层 md 放置位置、结构、示例（Spring Boot / 管理后台 Vue / uni-app） | [layer-guide.md](references/layer-guide.md) |
 | CLAUDE.md / AGENTS.md 最佳实践详解 | [best-practices.md](references/best-practices.md) |
-| 公司框架规范（生成 md 时可作为外链引用） | [../lingman-core/framework.md](../lingman-core/framework.md) |
+| 公司后端框架规范（生成 md 时可作为外链引用） | [framework.md](../lingman-core/framework.md) |
+| uni-app 通用规范（移动端项目可作为外链引用） | [uni-app-spec.md](../lingman-core/uni-app/uni-app-spec.md) |
